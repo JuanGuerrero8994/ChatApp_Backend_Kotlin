@@ -25,21 +25,18 @@ import io.ktor.server.config.*
 import com.mongodb.client.MongoClients
 import com.mongodb.client.MongoDatabase
 
-fun Application.connectToMongoDB(): MongoDatabase {
-    val user = environment.config.tryGetString("db.mongo.user")
-    val password = environment.config.tryGetString("db.mongo.password")
-    val host = environment.config.tryGetString("db.mongo.host") ?: "127.0.0.1"
-    val port = environment.config.tryGetString("db.mongo.port") ?: "27017"
-    val maxPoolSize = environment.config.tryGetString("db.mongo.maxPoolSize")?.toInt() ?: 20
-    val databaseName = environment.config.tryGetString("db.mongo.database.name") ?: "ChatApp"
+fun connectToMongoDB(application: Application): MongoDatabase {
+    val host = application.environment.config.tryGetString("db.mongo.host") ?: "127.0.0.1"
+    val port = application.environment.config.tryGetString("db.mongo.port") ?: "27017"
+    val maxPoolSize = application.environment.config.tryGetString("db.mongo.maxPoolSize")?.toInt() ?: 20
+    val databaseName = application.environment.config.tryGetString("db.mongo.database.name") ?: "ChatApp"
 
-    val credentials = user?.let { userVal -> password?.let { passwordVal -> "$userVal:$passwordVal@" } }.orEmpty()
-    val uri = "mongodb://$credentials$host:$port/?maxPoolSize=$maxPoolSize&w=majority"
+    val uri = "mongodb://$host:$port/?maxPoolSize=$maxPoolSize&w=majority"
 
     val mongoClient = MongoClients.create(uri)
     val database = mongoClient.getDatabase(databaseName)
 
-    monitor.subscribe(ApplicationStopped) {
+    application.monitor.subscribe(ApplicationStopped) {
         mongoClient.close()
     }
 

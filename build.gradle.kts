@@ -43,9 +43,7 @@ dependencies {
     // SLF4J Logger
     implementation("io.insert-koin:koin-logger-slf4j:4.0.3")
 
-
-
-
     implementation(libs.ktor.server.core)
     implementation(libs.logback.classic)
+
 }

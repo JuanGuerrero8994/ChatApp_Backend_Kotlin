@@ -1,12 +1,10 @@
 package com.ktor
 
 import com.ktor.di.appModule
-import com.ktor.plugins.configureHTTP
-import com.ktor.plugins.configureRouting
-import com.ktor.plugins.configureSecurity
-import com.ktor.plugins.configureSerialization
+import com.ktor.plugins.*
 import io.ktor.server.application.*
 import io.ktor.server.netty.*
+import org.koin.dsl.module
 import org.koin.ktor.plugin.Koin
 import org.koin.logger.slf4jLogger
 
@@ -17,7 +15,11 @@ fun main(args: Array<String>) {
 fun Application.module() {
     install(Koin) {
         slf4jLogger()
-        modules(appModule)  // Incluir el módulo de Koin
+        modules(appModule)
+        // Registrar la instancia de Application en Koin
+        allowOverride(true) // Permite sobrescribir definiciones en caso de conflicto
+        val app = this@module // Obtener la instancia de Application
+        koin.loadModules(listOf(module { single { app } })) // Agregar Application a Koin
     }
 
     configureHTTP()

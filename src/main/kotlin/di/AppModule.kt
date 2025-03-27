@@ -10,10 +10,8 @@ import org.koin.dsl.module
 import io.ktor.server.application.*
 
 val appModule = module {
-    // Directly access the Application instance and use it to establish a MongoDB connection
-    single<MongoDatabase> { get<Application>().connectToMongoDB() }
 
-    // Inject MongoDatabase into the repository
+    single<MongoDatabase> { connectToMongoDB(get()) }
     single<MessageRepository> { MessageRepositoryImpl(get()) }
 
     // Use cases
