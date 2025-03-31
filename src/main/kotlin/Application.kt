@@ -16,10 +16,9 @@ fun Application.module() {
     install(Koin) {
         slf4jLogger()
         modules(appModule)
-        // Registrar la instancia de Application en Koin
-        allowOverride(true) // Permite sobrescribir definiciones en caso de conflicto
-        val app = this@module // Obtener la instancia de Application
-        koin.loadModules(listOf(module { single { app } })) // Agregar Application a Koin
+        allowOverride(true)
+        val app = this@module
+        koin.loadModules(listOf(module { single { app } }))
     }
 
     configureHTTP()

@@ -1,12 +1,27 @@
 package com.ktor.data.model.message
 
+import com.ktor.domain.model.Message
+import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
+import org.bson.codecs.pojo.annotations.BsonId
+import org.bson.types.ObjectId
+
 
 @Serializable
 data class MessageResponseDto(
-    val id: String,       // ID del mensaje generado por MongoDB
-    val sender: String,   // Remitente
-    val message: String,  // Contenido del mensaje
-    val timestamp: Long,  // Momento en que se envió el mensaje
-    val fileUrl: String? = null // URL de un archivo adjunto (opcional)
-)
+    @BsonId @Contextual val id: String,
+    val sender: String,
+    val message: String,
+    val timestamp: String,
+    val fileUrl: String? = null
+) {
+    fun toDomain(): Message {
+        return Message(
+            id = id, // Convertir ObjectId a String
+            sender = sender,
+            message = message,
+            timestamp = timestamp,
+            fileUrl = fileUrl
+        )
+    }
+}

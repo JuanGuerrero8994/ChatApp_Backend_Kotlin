@@ -2,6 +2,7 @@ package com.ktor.plugins
 
 import com.ktor.core.Resource
 import com.ktor.data.model.message.MessageRequestDto
+import com.ktor.domain.model.Message
 import com.ktor.domain.usecases.GetAllMessagesUseCase
 import com.ktor.domain.usecases.SendMessageUseCase
 import io.ktor.http.*
@@ -9,6 +10,9 @@ import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.last
 import org.koin.ktor.ext.inject
 
 fun Application.configureRouting() {
@@ -18,23 +22,13 @@ fun Application.configureRouting() {
     routing {
         route("/messages") {
             get {
-                getAllMessagesUseCase().collect { response ->
-                    when (response) {
-                        is Resource.Success -> {
-                            call.respond(HttpStatusCode.OK, response.data ?: emptyList())
-                        }
+                val response = getAllMessagesUseCase()
+                    .last() // 🟢 Espera hasta que el flujo termine y obtiene el último valor emitido
 
-                        is Resource.Error -> {
-                            call.respond(
-                                HttpStatusCode.InternalServerError,
-                                response.message ?: "Error desconocido"
-                            )
-                        }
-
-                        is Resource.Loading -> {
-                            call.respond(HttpStatusCode.Accepted) // Indicar que aún está cargando
-                        }
-                    }
+                when (response) {
+                    is Resource.Success -> call.respond(HttpStatusCode.OK, response.data ?: emptyList<Message>())
+                    is Resource.Error -> call.respond(HttpStatusCode.InternalServerError, response.message ?: "Unknown error")
+                    else -> call.respond(HttpStatusCode.OK, emptyList<Message>()) // Si hay un estado inesperado
                 }
             }
 

@@ -1,6 +1,7 @@
 package com.ktor.domain.usecases
 
 import com.ktor.core.Resource
+import com.ktor.data.model.message.MessageResponseDto
 import com.ktor.domain.model.Message
 import com.ktor.domain.repository.MessageRepository
 import kotlinx.coroutines.flow.Flow

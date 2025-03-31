@@ -10,7 +10,9 @@ import kotlinx.serialization.json.Json
 fun Application.configureSerialization() {
     install(ContentNegotiation) {
         json(Json {
-            ignoreUnknownKeys = true // This allows ignoring unknown keys during serialization
-        })
+            prettyPrint = true
+            isLenient = true
+            ignoreUnknownKeys = true
+        })// Puede permitir formatos de JSON no estrictos        })
     }
 }
