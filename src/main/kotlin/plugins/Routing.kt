@@ -3,15 +3,13 @@ package com.ktor.plugins
 import com.ktor.core.Resource
 import com.ktor.data.model.message.MessageRequestDto
 import com.ktor.domain.model.Message
-import com.ktor.domain.usecases.GetAllMessagesUseCase
-import com.ktor.domain.usecases.SendMessageUseCase
+import com.ktor.domain.usecases.message.GetAllMessagesUseCase
+import com.ktor.domain.usecases.message.SendMessageUseCase
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.last
 import org.koin.ktor.ext.inject
 

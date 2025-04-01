@@ -46,4 +46,20 @@ dependencies {
     implementation(libs.ktor.server.core)
     implementation(libs.logback.classic)
 
+    // Spring Boot Web para API REST
+    implementation("org.springframework.boot:spring-boot-starter-web")
+
+    // Spring Boot Data MongoDB
+    implementation("org.springframework.boot:spring-boot-starter-data-mongodb")
+
+    // Jackson para serialización JSON
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
+
+    // Kotlin Extensions para Spring
+    implementation("org.jetbrains.kotlin:kotlin-reflect")
+
+    // Pruebas
+    testImplementation("org.springframework.boot:spring-boot-starter-test")
+
+
 }

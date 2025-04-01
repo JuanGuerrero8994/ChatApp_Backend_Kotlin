@@ -14,14 +14,4 @@ data class MessageResponseDto(
     val message: String,
     val timestamp: String,
     val fileUrl: String? = null
-) {
-    fun toDomain(): Message {
-        return Message(
-            id = id, // Convertir ObjectId a String
-            sender = sender,
-            message = message,
-            timestamp = timestamp,
-            fileUrl = fileUrl
-        )
-    }
-}
+)

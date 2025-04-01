@@ -1,7 +1,7 @@
 openapi: "3.0.3"
 info:
-  title: "Application API"
-  description: "Application API"
+  title: "Chat API"
+  description: "Chat API"
   version: "1.0.0"
 servers:
   - url: "http://localhost:8080"

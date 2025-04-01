@@ -20,12 +20,14 @@ object MessageMapper {
             fileUrl = fileUrl
         )
     }
-
-
-    // 🔹 Convierte Message (Dominio) → MessageResponseDto (Para API)
-    fun List<MessageResponseDto>.toDomainList(): List<Message> {
-        return this.map { it.toDomain() }
+    fun MessageResponseDto.toDomain(): Message {
+        return Message(
+            id = id,
+            sender = sender,
+            message = message,
+            timestamp = timestamp,
+            fileUrl = fileUrl
+        )
     }
-
 
 }

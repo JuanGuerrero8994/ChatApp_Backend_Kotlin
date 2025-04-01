@@ -5,23 +5,20 @@ import com.ktor.data.model.message.MessageRequestDto
 import com.ktor.domain.model.Message
 import com.ktor.domain.repository.MessageRepository
 import com.ktor.core.Resource
-import com.ktor.data.mapper.MessageMapper.toDomainList
 import com.ktor.data.model.message.MessageResponseDto
 import com.mongodb.client.MongoCollection
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import com.mongodb.client.MongoDatabase
 import org.bson.Document
-import org.bson.types.ObjectId
 
 class MessageRepositoryImpl(database: MongoDatabase) : MessageRepository {
 
     private val collection: MongoCollection<Document> = database.getCollection("messages")
 
-    override suspend fun insertMessage(requestDto: MessageRequestDto) {
+    override suspend fun insertMessage(request: MessageRequestDto) {
         try {
-            val message = requestDto.toDomain()  // Convert RequestDto → Message (Domain)
-            //val messageDto = message.toResponseDto()  // Convert Message (Domain) → MessageDto
+            val message = request.toDomain()
 
             // Convert MessageDto to Document
             val document = Document().apply {
