@@ -2,6 +2,9 @@ package com.ktor
 
 import com.ktor.di.appModule
 import com.ktor.plugins.*
+import io.ktor.client.*
+import io.ktor.client.engine.cio.*
+import io.ktor.client.plugins.websocket.*
 import io.ktor.server.application.*
 import io.ktor.server.netty.*
 import org.koin.dsl.module
@@ -13,6 +16,7 @@ fun main(args: Array<String>) {
 }
 
 fun Application.module() {
+    configureWebSockets()
     install(Koin) {
         slf4jLogger()
         modules(appModule)
@@ -21,9 +25,7 @@ fun Application.module() {
         koin.loadModules(listOf(module { single { app } }))
     }
 
-    configureWebSockets()
     configureHTTP()
     configureSerialization()
-    configureSecurity()
     configureRouting()
 }

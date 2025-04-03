@@ -13,6 +13,6 @@ fun Application.configureSerialization() {
             prettyPrint = true
             isLenient = true
             ignoreUnknownKeys = true
-        })// Puede permitir formatos de JSON no estrictos        })
+        })
     }
 }

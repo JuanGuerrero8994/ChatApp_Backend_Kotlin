@@ -2,10 +2,12 @@ package com.ktor.core
 
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
+import com.auth0.jwt.exceptions.JWTVerificationException
+import com.auth0.jwt.exceptions.TokenExpiredException
 import java.util.*
 
 object JWTUtil {
-    private const val SECRET = "mySuperSecretKey"  // 🛑 Cambia esto en producción
+    private const val SECRET = "chatSecretKey"  // 🛑 Cambia esto en producción
     private const val ISSUER = "ktor-app"
     private const val EXPIRATION_TIME = 3_600_000 // 1 hora en milisegundos
 
@@ -19,12 +21,17 @@ object JWTUtil {
 
     fun validateToken(token: String): String? {
         return try {
-            JWT.require(Algorithm.HMAC256(SECRET))
+            val verifier = JWT.require(Algorithm.HMAC256(SECRET))
                 .withIssuer(ISSUER)
                 .build()
-                .verify(token)
-                .subject
-        } catch (e: Exception) {
+
+            val decodedJWT = verifier.verify(token) // ✅ Verifica el token
+            decodedJWT.subject // ✅ Retorna el usuario si el token es válido
+        } catch (e: TokenExpiredException) {
+            println("❌ Token expirado")
+            null
+        } catch (e: JWTVerificationException) {
+            println("❌ Token inválido")
             null
         }
     }

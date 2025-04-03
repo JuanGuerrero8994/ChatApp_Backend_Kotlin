@@ -16,19 +16,40 @@ class MessageRepositoryImpl(database: MongoDatabase) : MessageRepository {
 
     private val collection: MongoCollection<Document> = database.getCollection("messages")
 
-    override suspend fun insertMessage(request: MessageRequestDto) {
+    override suspend fun insertMessage(request: MessageRequestDto, senderUsername: String):Flow<Resource<String>> = flow {
         try {
-            val message = request.toDomain()
+            emit(Resource.Loading())
 
-            // Convert MessageDto to Document
+            // 🔹 Validar que el mensaje no esté vacío
+            if (request.message.isBlank()) {
+                emit(Resource.Error("El mensaje no puede estar vacío"))
+                return@flow
+            }
+
+            // 🔹 Validar que el usuario existe en la base de datos
+            val userExists = collection.find(Document("sender", senderUsername)).firstOrNull()
+            if (userExists == null) {
+                emit(Resource.Error("El usuario no existe"))
+                return@flow
+            }
+            // 🔹 Validar formato de fileUrl si se envía un archivo
+            if (!request.fileUrl.isNullOrBlank() && !request.fileUrl.startsWith("http")) {
+                emit(Resource.Error("URL del archivo inválida"))
+                return@flow
+            }
+
+            val message = request.toDomain().copy(sender = senderUsername) // 🔹 Forzamos el sender correcto
+
             val document = Document().apply {
-                put("sender", message.sender)
+                put("sender", message.sender) // 🔹 Ahora es seguro
                 put("message", message.message)
                 put("timestamp", message.timestamp)
                 put("fileUrl", message.fileUrl)
             }
 
-            collection.insertOne(document)  // Insert Document into MongoDB
+            collection.insertOne(document)
+            emit(Resource.Success("Message sent successfully"))
+
         } catch (e: Exception) {
             throw Exception("Error inserting the message: ${e.message}")
         }

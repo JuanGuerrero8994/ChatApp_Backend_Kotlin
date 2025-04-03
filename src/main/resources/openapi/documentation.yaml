@@ -1,11 +1,74 @@
 openapi: "3.0.3"
 info:
   title: "Chat API"
-  description: "Chat API"
+  description: "A simple chat API with user authentication and real-time messaging."
   version: "1.0.0"
 servers:
   - url: "http://localhost:8080"
 paths:
+  /users/register:
+    post:
+      description: "Register a new user"
+      requestBody:
+        description: "User registration data"
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserRequest"
+      responses:
+        "201":
+          description: "User successfully registered"
+        "400":
+          description: "Invalid user data"
+
+  /users/authenticate:
+    post:
+      description: "Authenticate user and return a token"
+      requestBody:
+        description: "User credentials"
+        required: true
+        content:
+          application/json:
+            schema:
+              type: "object"
+              properties:
+                username:
+                  type: "string"
+                password:
+                  type: "string"
+      responses:
+        "200":
+          description: "Authentication successful"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  token:
+                    type: "string"
+        "401":
+          description: "Invalid credentials"
+
+  /users/{username}:
+    get:
+      description: "Retrieve a user by username"
+      parameters:
+        - name: "username"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+      responses:
+        "200":
+          description: "User found"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "404":
+          description: "User not found"
+
   /messages:
     get:
       description: "Retrieve all messages"
@@ -25,14 +88,52 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/Message"
+              $ref: "#/components/schemas/MessageRequest"
       responses:
         "201":
           description: "Message successfully created"
         "400":
           description: "Invalid message data"
+
+  /chat:
+    get:
+      description: "WebSocket endpoint for real-time messaging"
+      responses:
+        "101":
+          description: "Switching protocols for WebSocket connection"
+
 components:
   schemas:
+    UserRequest:
+      type: "object"
+      properties:
+        username:
+          type: "string"
+        password:
+          type: "string"
+        email:
+          type: "string"
+          format: "email"
+
+    User:
+      type: "object"
+      properties:
+        id:
+          type: "string"
+        username:
+          type: "string"
+        email:
+          type: "string"
+          format: "email"
+
+    MessageRequest:
+      type: "object"
+      properties:
+        sender:
+          type: "string"
+        message:
+          type: "string"
+
     Message:
       type: "object"
       properties:

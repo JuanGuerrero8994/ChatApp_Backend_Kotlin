@@ -38,8 +38,13 @@ dependencies {
     implementation(libs.ktor.server.cors)
     implementation(libs.ktor.serialization.kotlinx.json)
     implementation(libs.ktor.server.content.negotiation)
+
+    implementation(libs.ktor.client.cio)
+    implementation(libs.ktor.client.web.socket)
     implementation(libs.ktor.server.web.socket)
-    implementation("org.mindrot:jbcrypt:0.4") // 🔒 Para encriptar contraseñas
+
+
+    implementation("org.mindrot:jbcrypt:0.4") // USAR LA ENCRIPTACION PARA LAS CONTRASEÑAS
 
     testImplementation(libs.ktor.server.test.host)
 

@@ -9,6 +9,7 @@ import com.ktor.domain.usecases.message.SendMessageUseCase
 import com.ktor.domain.usecases.user.AuthenticateUserUseCase
 import com.ktor.domain.usecases.user.FindUserUseCase
 import com.ktor.domain.usecases.user.RegisterUserUseCase
+import com.ktor.domain.usecases.user.ValidateTokenUseCase
 import com.ktor.plugins.connectToMongoDB
 import com.mongodb.client.MongoDatabase
 import org.koin.dsl.module
@@ -21,6 +22,7 @@ val appModule = module {
 
 
     // USE CASE AUTH
+    single { ValidateTokenUseCase(get()) }
     factory { RegisterUserUseCase(get()) }
     factory { FindUserUseCase(get()) }
     factory { AuthenticateUserUseCase(get()) }
