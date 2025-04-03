@@ -1,31 +1,29 @@
 package com.ktor.data.mapper
 
-import com.ktor.data.model.user.UserDto
 import com.ktor.data.model.user.UserRequestDTO
 import com.ktor.data.model.user.UserResponseDTO
 import com.ktor.domain.model.User
-import org.bson.types.ObjectId
-
+import org.mindrot.jbcrypt.BCrypt
 
 object UserMapper {
 
-    // Mapea un UserRequestDTO a un User
-    fun UserResponseDTO.toDomain(hashedPassword: String): User {
+    // Mapea un UserRequestDTO a un User (hasheando la contraseña)
+    fun UserRequestDTO.toDomain(): User {
         return User(
-            id = this.id,  // Usamos el id ya que es parte de UserResponseDTO
+            id = "",  // El ID será asignado por MongoDB
             username = this.username,
             email = this.email,
-            passwordHash = hashedPassword  // Este es el hash que obtuviste al momento de autenticación o creación
+            passwordHash = BCrypt.hashpw(this.password, BCrypt.gensalt()) // 🔒 Hasheamos la contraseña
         )
     }
 
-    // Mapea un User a un UserResponseDTO
-    fun toResponse(user: User, token: String? = null): UserResponseDTO {
+    // Mapea un User a un UserResponseDTO (sin exponer la contraseña)
+    fun User.toResponse(): UserResponseDTO {
         return UserResponseDTO(
-            id = user.id,  // Asumimos que el id ya es un String
-            username = user.username,
-            email = user.email,
-            passwordHash = user.passwordHash  // Si lo necesitas en la respuesta, mantén este campo
+            id = this.id,
+            username = this.username,
+            email = this.email,
+            passwordHash = "" // No exponer la contraseña en la respuesta
         )
     }
 }

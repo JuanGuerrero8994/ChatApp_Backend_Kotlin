@@ -20,46 +20,43 @@ repositories {
 }
 
 dependencies {
-    implementation(libs.ktor.server.core)
-    implementation(libs.ktor.server.swagger)
-    implementation(libs.ktor.server.cors)
-    implementation(libs.ktor.serialization.kotlinx.json)
-    implementation(libs.ktor.server.content.negotiation)
+
     implementation(libs.mongodb.driver.core)
     implementation(libs.mongodb.driver.sync)
     implementation(libs.bson)
     implementation("org.litote.kmongo:kmongo-coroutine:4.6.0")
+
+    implementation("io.ktor:ktor-server-swagger:3.1.1") // Para servir Swagger UI
+    implementation("io.ktor:ktor-server-openapi:3.1.1") // Para generar OpenAPI
+
+
+    implementation(libs.ktor.server.core)
     implementation(libs.ktor.server.auth)
     implementation(libs.ktor.server.auth.jwt)
     implementation(libs.ktor.server.netty)
-    implementation(libs.logback.classic)
     implementation(libs.ktor.server.config.yaml)
+    implementation(libs.ktor.server.cors)
+    implementation(libs.ktor.serialization.kotlinx.json)
+    implementation(libs.ktor.server.content.negotiation)
+    implementation(libs.ktor.server.web.socket)
+    implementation("org.mindrot:jbcrypt:0.4") // 🔒 Para encriptar contraseñas
+
     testImplementation(libs.ktor.server.test.host)
+
+    implementation(libs.logback.classic)
+
     testImplementation(libs.kotlin.test.junit)
     implementation(libs.koin.core)
+
     implementation("io.insert-koin:koin-core:4.0.3")
     // Koin for Ktor
     implementation("io.insert-koin:koin-ktor:4.0.3")
     // SLF4J Logger
     implementation("io.insert-koin:koin-logger-slf4j:4.0.3")
 
-    implementation(libs.ktor.server.core)
     implementation(libs.logback.classic)
 
-    // Spring Boot Web para API REST
-    implementation("org.springframework.boot:spring-boot-starter-web")
 
-    // Spring Boot Data MongoDB
-    implementation("org.springframework.boot:spring-boot-starter-data-mongodb")
-
-    // Jackson para serialización JSON
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
-
-    // Kotlin Extensions para Spring
-    implementation("org.jetbrains.kotlin:kotlin-reflect")
-
-    // Pruebas
-    testImplementation("org.springframework.boot:spring-boot-starter-test")
 
 
 }

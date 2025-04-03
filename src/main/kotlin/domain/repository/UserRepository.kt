@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.Flow
 
 interface UserRepository {
     suspend fun findUser(username: String): Flow<Resource<User?>>
-    suspend fun registerUser(user: User): Flow<Resource<User>>  // Usamos Flow para emitir los estados
-    suspend fun authenticateUser(username: String, password: String): Flow<Resource<User?>>
+    suspend fun registerUser(userRequestDTO: UserRequestDTO): Flow<Resource<User>>
+    suspend fun authenticateUser(username: String, password: String): Flow<Resource<String>>
 
 }

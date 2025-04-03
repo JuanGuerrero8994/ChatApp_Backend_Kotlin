@@ -21,6 +21,7 @@ fun Application.module() {
         koin.loadModules(listOf(module { single { app } }))
     }
 
+    configureWebSockets()
     configureHTTP()
     configureSerialization()
     configureSecurity()
