@@ -8,6 +8,7 @@ import org.bson.codecs.pojo.annotations.BsonId
 data class Message(
     val id:String?=null,
     val sender: String? = null,
+    val chatRoomId:String? = null,
     val message: String? = null,
     val timestamp: String? = null,
     val fileUrl: String? = null

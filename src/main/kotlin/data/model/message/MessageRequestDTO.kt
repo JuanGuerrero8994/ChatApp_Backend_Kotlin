@@ -1,15 +1,13 @@
 package com.ktor.data.model.message
 
-import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
-import org.bson.codecs.pojo.annotations.BsonId
-import org.bson.types.ObjectId
 import java.text.SimpleDateFormat
 import java.util.*
 
 @Serializable
 data class MessageRequestDto(
-    val sender: String,    // Remitente del mensaje
+    val sender: String, // Remitente del mensaje
+    val chatRoomId: String,       // ID de la sala
     val message: String,   // Contenido del mensaje
     val timestamp: String = getCurrentDate(),   // Momento en que se envió el mensaje
     val fileUrl: String? = null // URL de un archivo adjunto (opcional)

@@ -15,6 +15,7 @@ object MessageMapper {
         return Message(
             id = ObjectId().toHexString(),
             sender = sender,
+            chatRoomId = chatRoomId ,
             message = message,
             timestamp = timestamp,
             fileUrl = fileUrl
@@ -24,6 +25,7 @@ object MessageMapper {
         return Message(
             id = id,
             sender = sender,
+            chatRoomId=chatRoomId,
             message = message,
             timestamp = timestamp,
             fileUrl = fileUrl

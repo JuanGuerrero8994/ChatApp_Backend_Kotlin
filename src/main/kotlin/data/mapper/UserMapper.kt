@@ -1,6 +1,9 @@
+import com.ktor.data.mapper.MessageMapper.toDomain
 import com.ktor.data.model.user.UserRequestDTO
 import com.ktor.data.model.user.UserResponseDTO
 import com.ktor.domain.model.User
+import com.ktor.domain.model.Message
+import org.bson.Document
 import org.mindrot.jbcrypt.BCrypt
 
 object UserMapper {
@@ -11,19 +14,25 @@ object UserMapper {
         val user = User(
             id = "",  // El ID lo asignará MongoDB
             username = this.username,
-            email = this.email
-        )
+            email = this.email)
+
         return Pair(user, hashedPassword) // ✅ Retornamos el usuario y la contraseña hasheada
     }
 
-    // Mapea un User a un UserResponseDTO (sin exponer la contraseña)
-    fun User.toResponse(): UserResponseDTO {
-        return UserResponseDTO(
+    fun UserResponseDTO.toDomain(): User {
+        return User(
             id = this.id,
             username = this.username,
-            email = this.email
+            email = this.email,
         )
     }
 
+    fun Document.toUserDomain(): User {
+        return User(
+            id = this["id"]?.toString() ?: "",
+            username = this["username"] as? String ?: "",
+            email = this["email"] as? String ?: ""
+        )
+    }
 
 }

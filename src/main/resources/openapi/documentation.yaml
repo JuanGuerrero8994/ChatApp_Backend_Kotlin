@@ -3,14 +3,18 @@ info:
   title: "Chat API"
   description: "A simple chat API with user authentication and real-time messaging."
   version: "1.0.0"
+
 servers:
   - url: "http://localhost:8080"
+
+security:
+  - bearerAuth: []  # Aplica autenticación a todas las rutas por defecto
+
 paths:
   /users/register:
     post:
       description: "Register a new user"
       requestBody:
-        description: "User registration data"
         required: true
         content:
           application/json:
@@ -26,7 +30,6 @@ paths:
     post:
       description: "Authenticate user and return a token"
       requestBody:
-        description: "User credentials"
         required: true
         content:
           application/json:
@@ -52,6 +55,8 @@ paths:
 
   /users/{username}:
     get:
+      security:
+        - bearerAuth: []  # Esta ruta requiere autenticación
       description: "Retrieve a user by username"
       parameters:
         - name: "username"
@@ -71,6 +76,8 @@ paths:
 
   /messages:
     get:
+      security:
+        - bearerAuth: []  # Esta ruta requiere autenticación
       description: "Retrieve all messages"
       responses:
         "200":
@@ -82,9 +89,11 @@ paths:
                 items:
                   $ref: "#/components/schemas/Message"
     post:
+      security:
+        - bearerAuth: []  # Esta ruta requiere autenticación
       description: "Send a new message"
       requestBody:
-        description: "Message data"
+        required: true
         content:
           application/json:
             schema:
@@ -97,12 +106,100 @@ paths:
 
   /chat:
     get:
+      security:
+        - bearerAuth: []  # Esta ruta requiere autenticación
       description: "WebSocket endpoint for real-time messaging"
       responses:
         "101":
           description: "Switching protocols for WebSocket connection"
 
+    post:
+      security:
+        - bearerAuth: []  # Requiere autenticación
+      description: "Create a new chat"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChatRoomRequest"
+      responses:
+        "201":
+          description: "Chat successfully created"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChatRoom"
+        "400":
+          description: "Invalid chat data"
+
+  /chat/{chatId}:
+    get:
+      security:
+        - bearerAuth: []  # Requiere autenticación
+      description: "Retrieve chat details by chat ID"
+      parameters:
+        - name: "chatId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+      responses:
+        "200":
+          description: "Chat details"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChatRoom"
+        "404":
+          description: "Chat not found"
+
+    delete:
+      security:
+        - bearerAuth: []  # Requiere autenticación
+      description: "Delete a chat by ID"
+      parameters:
+        - name: "chatId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+      responses:
+        "200":
+          description: "Chat deleted successfully"
+        "404":
+          description: "Chat not found"
+
+  /chat/user/{username}:
+    get:
+      security:
+        - bearerAuth: []  # Requiere autenticación
+      description: "Retrieve all chats for a specific user"
+      parameters:
+        - name: "username"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+      responses:
+        "200":
+          description: "List of user's chats"
+          content:
+            application/json:
+              schema:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/ChatRoom"
+        "404":
+          description: "User not found or no chats available"
+
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT  # Indica que se usa un token JWT
+
   schemas:
     UserRequest:
       type: "object"
@@ -149,3 +246,29 @@ components:
         fileUrl:
           type: "string"
           nullable: true
+
+    ChatRoomRequest:
+      type: "object"
+      properties:
+        name:
+          type: "string"
+        users:
+          type: "array"
+          items:
+            type: "string"
+
+    ChatRoom:
+      type: "object"
+      properties:
+        id:
+          type: "string"
+        name:
+          type: "string"
+        users:
+          type: "array"
+          items:
+            type: "string"
+        messages:
+          type: "array"
+          items:
+            $ref: "#/components/schemas/Message"

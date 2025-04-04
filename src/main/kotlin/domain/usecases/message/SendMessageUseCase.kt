@@ -7,5 +7,5 @@ import kotlinx.coroutines.flow.Flow
 
 
 class SendMessageUseCase(private val repository: MessageRepository) {
-    suspend operator fun invoke(request: MessageRequestDto,senderUserName:String):Flow<Resource<String>> = repository.insertMessage(request,senderUserName)
+    suspend operator fun invoke(request: MessageRequestDto):Flow<Resource<String>> = repository.insertMessage(request)
 }

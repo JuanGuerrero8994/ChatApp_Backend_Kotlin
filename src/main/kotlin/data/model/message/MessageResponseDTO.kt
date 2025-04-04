@@ -11,6 +11,7 @@ import org.bson.types.ObjectId
 data class MessageResponseDto(
     @BsonId @Contextual val id: String,
     val sender: String,
+    val chatRoomId:String,
     val message: String,
     val timestamp: String,
     val fileUrl: String? = null

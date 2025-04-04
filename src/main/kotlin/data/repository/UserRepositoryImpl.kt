@@ -4,6 +4,7 @@ import UserMapper.toDomain
 import com.ktor.core.JWTUtil
 import com.ktor.core.Resource
 import com.ktor.data.model.user.UserRequestDTO
+import com.ktor.domain.model.Message
 import com.ktor.domain.model.User
 import com.ktor.domain.repository.UserRepository
 import com.mongodb.client.MongoCollection
@@ -43,10 +44,11 @@ class UserRepositoryImpl(database: MongoDatabase) : UserRepository {
         try {
             val document = collection.find(Document("username", username)).firstOrNull()
             if (document != null) {
+
                 val user = User(
                     id = document.getObjectId("_id").toString(),
                     username = document.getString("username"),
-                    email = document.getString("email")
+                    email = document.getString("email"),
                 )
                 emit(Resource.Success(user))
             } else {
@@ -87,10 +89,12 @@ class UserRepositoryImpl(database: MongoDatabase) : UserRepository {
             if (username != null) {
                 val document = collection.find(Document("username", username)).firstOrNull()
                 if (document != null) {
+
+
                     val user = User(
                         id = document.getObjectId("_id").toString(),
                         username = document.getString("username"),
-                        email = document.getString("email")
+                        email = document.getString("email"),
                     )
                     emit(Resource.Success(user)) // ✅ Usuario validado correctamente
                 } else {

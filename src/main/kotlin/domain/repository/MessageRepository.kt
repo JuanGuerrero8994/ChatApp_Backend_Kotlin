@@ -7,6 +7,8 @@ import com.ktor.domain.model.Message
 import kotlinx.coroutines.flow.Flow
 
 interface MessageRepository {
-    suspend fun insertMessage(message: MessageRequestDto,senderUserName:String):Flow<Resource<String>>
+    suspend fun insertMessage(message: MessageRequestDto):Flow<Resource<String>>
     fun getAllMessages(): Flow<Resource<List<Message>>>
+    fun getMessagesByChatRoomId(chatRoomId: String): Flow<Resource<List<Message>>>
+
 }

@@ -16,7 +16,7 @@ class MessageRepositoryImpl(database: MongoDatabase) : MessageRepository {
 
     private val collection: MongoCollection<Document> = database.getCollection("messages")
 
-    override suspend fun insertMessage(request: MessageRequestDto, senderUsername: String):Flow<Resource<String>> = flow {
+    override suspend fun insertMessage(request: MessageRequestDto):Flow<Resource<String>> = flow {
         try {
             emit(Resource.Loading())
 
@@ -26,22 +26,17 @@ class MessageRepositoryImpl(database: MongoDatabase) : MessageRepository {
                 return@flow
             }
 
-            // 🔹 Validar que el usuario existe en la base de datos
-            val userExists = collection.find(Document("sender", senderUsername)).firstOrNull()
-            if (userExists == null) {
-                emit(Resource.Error("El usuario no existe"))
-                return@flow
-            }
             // 🔹 Validar formato de fileUrl si se envía un archivo
             if (!request.fileUrl.isNullOrBlank() && !request.fileUrl.startsWith("http")) {
                 emit(Resource.Error("URL del archivo inválida"))
                 return@flow
             }
 
-            val message = request.toDomain().copy(sender = senderUsername) // 🔹 Forzamos el sender correcto
+            val message = request.toDomain()
 
             val document = Document().apply {
-                put("sender", message.sender) // 🔹 Ahora es seguro
+                put("sender", message.sender)
+                put("chatRoomId", message.chatRoomId)
                 put("message", message.message)
                 put("timestamp", message.timestamp)
                 put("fileUrl", message.fileUrl)
@@ -65,6 +60,7 @@ class MessageRepositoryImpl(database: MongoDatabase) : MessageRepository {
                 MessageResponseDto(
                     id = document.getObjectId("_id").toString(),
                     sender = document.getString("sender"),
+                    chatRoomId = document.getString("chatRoomId"),
                     message = document.getString("message"),
                     timestamp = document.getString("timestamp"),
                     fileUrl = document.getString("fileUrl")
@@ -76,6 +72,27 @@ class MessageRepositoryImpl(database: MongoDatabase) : MessageRepository {
             emit(Resource.Success(message))  // Emit the result to the domain layer
         } catch (e: Exception) {
             emit(Resource.Error("Error getting messages", e))
+        }
+    }
+    override fun getMessagesByChatRoomId(chatRoomId: String): Flow<Resource<List<Message>>> = flow {
+        emit(Resource.Loading())
+
+        try {
+            val messages = collection.find(Document("chatRoomId", chatRoomId)).map { document ->
+                MessageResponseDto(
+                    id = document.getObjectId("_id").toString(),
+                    sender = document.getString("sender"),
+                    chatRoomId = document.getString("chatRoomId"),
+                    message = document.getString("message"),
+                    timestamp = document.getString("timestamp"),
+                    fileUrl = document.getString("fileUrl")
+                ).toDomain()
+            }.toList()
+
+            emit(Resource.Success(messages))
+        } catch (e: Exception) {
+            e.printStackTrace()
+            emit(Resource.Error("Error al obtener mensajes por sala de chat: ${e.localizedMessage}"))
         }
     }
 }
