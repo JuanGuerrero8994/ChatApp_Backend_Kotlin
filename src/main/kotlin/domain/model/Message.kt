@@ -4,11 +4,10 @@ import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import org.bson.codecs.pojo.annotations.BsonId
 
-@Serializable
 data class Message(
-    val id:String?=null,
+    val id: String? = null,
     val sender: String? = null,
     val message: String? = null,
-    val timestamp: String? = null,
+    val timestamp: Long? = null,
     val fileUrl: String? = null
 )

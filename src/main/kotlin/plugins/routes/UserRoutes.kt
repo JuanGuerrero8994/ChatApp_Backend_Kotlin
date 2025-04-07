@@ -59,16 +59,6 @@ fun Route.userRoutes(
         post("/authenticate") {
             val userDTO = call.receive<UserRequestDTO>()
 
-            if (userDTO.email!!.isBlank()) {
-                call.respond(HttpStatusCode.BadRequest, "Email text cannot be empty.")
-                return@post
-            }
-
-            if (userDTO.password!!.isBlank()) {
-                call.respond(HttpStatusCode.BadRequest, "Password text cannot be empty.")
-                return@post
-            }
-
             val user = userDTO.toDomain()
 
             when (val response = authenticateUserUseCase(user).last()) {

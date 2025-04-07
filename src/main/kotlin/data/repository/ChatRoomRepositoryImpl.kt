@@ -1,5 +1,5 @@
 package com.ktor.data.repository
-
+/*
 import com.ktor.core.Resource
 import com.ktor.data.mapper.ChatRoomMapper.toDocument
 import com.ktor.data.mapper.ChatRoomMapper.toDomain
@@ -117,4 +117,4 @@ class ChatRoomRepositoryImpl(database: MongoDatabase) : ChatRoomRepository {
             emit(Resource.Error("Error al eliminar la sala: ${e.localizedMessage}"))
         }
     }
-}
+}*/

@@ -2,7 +2,7 @@ package com.ktor
 
 import com.ktor.di.appModule
 import com.ktor.plugins.*
-import com.ktor.plugins.routes.configureRouting
+import com.ktor.plugins.configureRouting
 import io.ktor.server.application.*
 import io.ktor.server.netty.*
 import org.koin.dsl.module

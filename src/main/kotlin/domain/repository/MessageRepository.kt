@@ -7,8 +7,8 @@ import com.ktor.domain.model.Message
 import kotlinx.coroutines.flow.Flow
 
 interface MessageRepository {
-    suspend fun insertMessage(message: MessageRequestDto):Flow<Resource<String>>
-    fun getAllMessages(): Flow<Resource<List<Message>>>
-    fun getMessagesByChatRoomId(chatRoomId: String): Flow<Resource<List<Message>>>
-
+    suspend fun sendMessage(message: Message):Flow<Resource<String>>
+    suspend fun getAllMessages(): Flow<Resource<List<Message>>>
+    suspend fun uploadFileToGridFS(bytes: ByteArray, fileName: String, contentType: String): Resource<String>
+    suspend fun getFileFromGridFS(fileId: String): Resource<ByteArray>
 }

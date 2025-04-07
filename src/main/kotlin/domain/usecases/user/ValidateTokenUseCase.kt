@@ -7,5 +7,4 @@ import kotlinx.coroutines.flow.Flow
 
 class ValidateTokenUseCase(private val repository: UserRepository) {
     suspend operator fun invoke(token: String): Flow<Resource<User>> = repository.validateToken(token)
-
 }

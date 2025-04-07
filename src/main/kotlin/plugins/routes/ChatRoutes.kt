@@ -1,97 +1,38 @@
 package com.ktor.plugins.routes
 
-import com.ktor.core.Resource
-import com.ktor.data.model.chat.ChatRoomRequestDto
-import com.ktor.domain.model.ChatRoom
-import com.ktor.domain.usecases.chat.CreateChatRoomUseCase
-import com.ktor.domain.usecases.chat.GetAllChatRoomUseCase
 import com.ktor.domain.usecases.user.ValidateTokenUseCase
-import io.ktor.http.*
-import io.ktor.server.request.*
-import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.websocket.*
 import io.ktor.websocket.*
-import kotlinx.coroutines.flow.last
+import java.util.concurrent.CopyOnWriteArrayList
 
-fun Route.chatRoutes(
-    validateTokenUseCase: ValidateTokenUseCase,
-    createChatRoomUseCase: CreateChatRoomUseCase,
-    getAllChatRoomUseCase: GetAllChatRoomUseCase
-) {
-    val chatRooms = mutableMapOf<String, MutableList<DefaultWebSocketServerSession>>()
+fun Route.chatRoutes(validateTokenUseCase: ValidateTokenUseCase) {
 
-    route("/chat") {
+    val connections = CopyOnWriteArrayList<DefaultWebSocketServerSession>()
 
-        post {
-            val user = call.getAuthenticatedUser(validateTokenUseCase)
-            if (user == null) {
-                call.respond(HttpStatusCode.Unauthorized, "Invalid or missing token")
-                return@post
-            }
-
-            val chatRoomRequest = call.receive<ChatRoomRequestDto>()
-
-            println("Prueba ${chatRoomRequest}")
-
-            when (val response = createChatRoomUseCase(chatRoomRequest).last()) {
-                is Resource.Success -> call.respond(
-                    HttpStatusCode.Created,
-                    response.data ?: "Chat room created"
-                )
-
-                is Resource.Error -> call.respond(
-                    HttpStatusCode.InternalServerError,
-                    response.message ?: "Unknown error"
-                )
-
-                else -> call.respond(HttpStatusCode.InternalServerError, "Unexpected error")
-            }
-        }
-
-        get {
-            when (val response = getAllChatRoomUseCase().last()) {
-                is Resource.Success -> call.respond(HttpStatusCode.OK, response.data ?: emptyList<ChatRoom>())
-                is Resource.Error -> call.respond(
-                    HttpStatusCode.InternalServerError,
-                    response.message ?: "Unknown error"
-                )
-
-                else -> call.respond(HttpStatusCode.InternalServerError, "Unexpected error")
-            }
-        }
-    }
-
-
-    webSocket("/chat/{room}") {
-        val room = call.parameters["room"]
-        if (room.isNullOrBlank()) {
-            close(CloseReason(CloseReason.Codes.VIOLATED_POLICY, "Room ID required"))
-            return@webSocket
-        }
-
+    webSocket("/chat") {
         val user = call.getAuthenticatedUser(validateTokenUseCase)
+        println("Token recibido: ${call.request.headers["Authorization"]}")
+
         if (user == null) {
-            close(CloseReason(CloseReason.Codes.VIOLATED_POLICY, "Unauthorized"))
+            close(CloseReason(CloseReason.Codes.VIOLATED_POLICY, "No autorizado"))
             return@webSocket
         }
 
-        println("Usuario ${user.username} conectado a la sala: $room")
-
-        val roomConnections = chatRooms.getOrPut(room) { mutableListOf() }
-        roomConnections.add(this)
+        println("Usuario conectado: ${user.username}")
+        connections.add(this)
 
         try {
             for (frame in incoming) {
                 when (frame) {
                     is Frame.Text -> {
                         val receivedMessage = frame.readText()
-                        println("[Sala $room] ${user.username}: $receivedMessage")
+                        println("Mensaje de ${user.username}: $receivedMessage")
 
-                        // Enviar mensaje solo a los usuarios de la misma sala
-                        roomConnections.forEach {
+                        // Enviar el mensaje a todos los clientes conectados
+                        connections.forEach {
                             try {
-                                it.send(Frame.Text("[Sala $room] ${user.username}: $receivedMessage"))
+                                it.send(Frame.Text("${user.username}: $receivedMessage"))
                             } catch (e: Exception) {
                                 println("Error enviando mensaje: ${e.message}")
                             }
@@ -102,18 +43,10 @@ fun Route.chatRoutes(
                 }
             }
         } catch (e: Exception) {
-            println("Error en WebSocket en sala $room: ${e.message}")
+            println("Error en WebSocket: ${e.message}")
         } finally {
-            roomConnections.remove(this)
-            println("Usuario ${user.username} salió de la sala: $room")
-
-            // Eliminar la sala si no hay más usuarios
-            if (roomConnections.isEmpty()) {
-                chatRooms.remove(room)
-            }
+            connections.remove(this)
+            println("Usuario desconectado: ${user.username}")
         }
     }
 }
-
-
-

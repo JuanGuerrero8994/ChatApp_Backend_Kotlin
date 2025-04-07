@@ -9,9 +9,11 @@ import org.bson.types.ObjectId
 
 @Serializable
 data class MessageResponseDto(
-    @BsonId @Contextual val id: String,
+    @BsonId
+    @Contextual
+    val id: String,
     val sender: String,
     val message: String,
-    val timestamp: String,
+    val timestamp: Long,
     val fileUrl: String? = null
 )

@@ -6,7 +6,5 @@ import com.ktor.domain.repository.MessageRepository
 import kotlinx.coroutines.flow.Flow
 
 class GetAllMessagesUseCase(private val repository: MessageRepository) {
-    operator fun invoke(): Flow<Resource<List<Message>>> {
-        return repository.getAllMessages()
-    }
+    suspend operator fun invoke(): Flow<Resource<List<Message>>> = repository.getAllMessages()
 }
