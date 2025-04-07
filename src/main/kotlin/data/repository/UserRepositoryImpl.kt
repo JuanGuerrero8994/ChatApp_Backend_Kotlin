@@ -1,10 +1,7 @@
 package com.ktor.data.repository
 
-import UserMapper.toDomain
-import com.ktor.core.JWTUtil
+ import com.ktor.core.JWTUtil
 import com.ktor.core.Resource
-import com.ktor.data.model.user.UserRequestDTO
-import com.ktor.domain.model.Message
 import com.ktor.domain.model.User
 import com.ktor.domain.repository.UserRepository
 import com.mongodb.client.MongoCollection
@@ -13,43 +10,34 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import org.bson.Document
 import org.mindrot.jbcrypt.BCrypt
+import toUser
 
 class UserRepositoryImpl(database: MongoDatabase) : UserRepository {
 
     private val collection: MongoCollection<Document> = database.getCollection("users")
 
-    override suspend fun registerUser(userRequestDTO: UserRequestDTO): Flow<Resource<User>> = flow {
+    override suspend fun registerUser(user: User): Flow<Resource<User>> = flow {
         emit(Resource.Loading())
         try {
-            val (user, hashedPassword) = userRequestDTO.toDomain() // ✅ Obtenemos usuario sin password y el hash
-
-            val document = Document().apply {
+            val doc = Document().apply {
                 put("username", user.username)
                 put("email", user.email)
-                put("passwordHash", hashedPassword) // 🔒 Guardamos el hash en la DB
+                put("passwordHash", BCrypt.hashpw(user.password, BCrypt.gensalt()))
             }
-            collection.insertOne(document)
-
-            val createdUser = user.copy(id = document.getObjectId("_id").toString())
-
-            emit(Resource.Success(createdUser)) // ✅ Devuelve solo el modelo del dominio
+            collection.insertOne(doc)
+            emit(Resource.Success(doc.toUser()))
         } catch (e: Exception) {
             emit(Resource.Error("Error registering user", e))
         }
     }
 
 
-    override suspend fun findUser(username: String): Flow<Resource<User?>> = flow {
+    override suspend fun findUser(user: User): Flow<Resource<User>> = flow {
         emit(Resource.Loading())
         try {
-            val document = collection.find(Document("username", username)).firstOrNull()
-            if (document != null) {
+            val document = collection.find(Document("username", user.username)).firstOrNull()
 
-                val user = User(
-                    id = document.getObjectId("_id").toString(),
-                    username = document.getString("username"),
-                    email = document.getString("email"),
-                )
+            if (document != null) {
                 emit(Resource.Success(user))
             } else {
                 emit(Resource.Error("User not found"))
@@ -59,19 +47,20 @@ class UserRepositoryImpl(database: MongoDatabase) : UserRepository {
         }
     }
 
-    override suspend fun authenticateUser(username: String, password: String): Flow<Resource<String>> = flow {
+    override suspend fun authenticateUser(user:User): Flow<Resource<String>> = flow {
         emit(Resource.Loading())
         try {
-            val document = collection.find(Document("username", username)).firstOrNull()
-            if (document != null) {
-                val storedPasswordHash = document.getString("passwordHash")
+            val document = collection.find(Document("email", user.email)).firstOrNull()
 
-                if (BCrypt.checkpw(password, storedPasswordHash)) { // 🔒 Verificación segura
-                    // ✅ Generar JWT
+            if (document != null) {
+                val storedPasswordHash = document.getString("passwordHash") ?: ""
+                if (BCrypt.checkpw(user.password, storedPasswordHash)) {
+                    val username = document.getString("email")
+
                     val token = JWTUtil.generateToken(username)
                     emit(Resource.Success(token))
                 } else {
-                    emit(Resource.Error("Invalid password"))
+                    emit(Resource.Error("Invalid credentials"))
                 }
             } else {
                 emit(Resource.Error("User not found"))
@@ -80,23 +69,22 @@ class UserRepositoryImpl(database: MongoDatabase) : UserRepository {
             emit(Resource.Error("Error during authentication", e))
         }
     }
-
     override suspend fun validateToken(token: String): Flow<Resource<User>> = flow {
         emit(Resource.Loading())
         try {
-            val username = JWTUtil.validateToken(token) // 🔄 Extraer username del token
+            val email = JWTUtil.validateToken(token) // 🔄 Extraer username del token
 
-            if (username != null) {
-                val document = collection.find(Document("username", username)).firstOrNull()
+            if (email != null) {
+                val document = collection.find(Document("email", email)).firstOrNull()
                 if (document != null) {
-
 
                     val user = User(
                         id = document.getObjectId("_id").toString(),
                         username = document.getString("username"),
                         email = document.getString("email"),
+                        password = document.getString("passwordHash")
                     )
-                    emit(Resource.Success(user)) // ✅ Usuario validado correctamente
+                    emit(Resource.Success(user))
                 } else {
                     emit(Resource.Error("User not found"))
                 }

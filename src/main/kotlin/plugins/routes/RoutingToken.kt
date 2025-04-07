@@ -1,4 +1,4 @@
-package com.ktor.plugins
+package com.ktor.plugins.routes
 
 import com.ktor.core.Resource
 import com.ktor.domain.model.User

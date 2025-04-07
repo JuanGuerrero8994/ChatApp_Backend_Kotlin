@@ -36,7 +36,6 @@ class MessageRepositoryImpl(database: MongoDatabase) : MessageRepository {
 
             val document = Document().apply {
                 put("sender", message.sender)
-                put("chatRoomId", message.chatRoomId)
                 put("message", message.message)
                 put("timestamp", message.timestamp)
                 put("fileUrl", message.fileUrl)
@@ -60,7 +59,6 @@ class MessageRepositoryImpl(database: MongoDatabase) : MessageRepository {
                 MessageResponseDto(
                     id = document.getObjectId("_id").toString(),
                     sender = document.getString("sender"),
-                    chatRoomId = document.getString("chatRoomId"),
                     message = document.getString("message"),
                     timestamp = document.getString("timestamp"),
                     fileUrl = document.getString("fileUrl")
@@ -82,7 +80,6 @@ class MessageRepositoryImpl(database: MongoDatabase) : MessageRepository {
                 MessageResponseDto(
                     id = document.getObjectId("_id").toString(),
                     sender = document.getString("sender"),
-                    chatRoomId = document.getString("chatRoomId"),
                     message = document.getString("message"),
                     timestamp = document.getString("timestamp"),
                     fileUrl = document.getString("fileUrl")

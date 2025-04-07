@@ -8,7 +8,6 @@ import com.ktor.data.model.user.UserRequestDTO
 import kotlinx.coroutines.flow.Flow
 
 class RegisterUserUseCase(private val repository: UserRepository) {
-    suspend operator fun invoke(userRequestDTO: UserRequestDTO): Flow<Resource<User>> {
-        return repository.registerUser(userRequestDTO)
-    }
+    suspend operator fun invoke(user:User): Flow<Resource<User>> = repository.registerUser(user)
+
 }

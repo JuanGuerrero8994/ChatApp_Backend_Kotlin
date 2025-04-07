@@ -39,7 +39,7 @@ val appModule = module {
 
 
     // USE CASE AUTH
-    single { ValidateTokenUseCase(get()) }
+    factory { ValidateTokenUseCase(get()) }
     factory { RegisterUserUseCase(get()) }
     factory { FindUserUseCase(get()) }
     factory { AuthenticateUserUseCase(get()) }

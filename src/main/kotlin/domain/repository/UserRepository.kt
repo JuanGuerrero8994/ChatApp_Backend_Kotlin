@@ -7,8 +7,8 @@ import com.ktor.domain.model.User
 import kotlinx.coroutines.flow.Flow
 
 interface UserRepository {
-    suspend fun findUser(username: String): Flow<Resource<User?>>
-    suspend fun registerUser(userRequestDTO: UserRequestDTO): Flow<Resource<User>>
-    suspend fun authenticateUser(username: String, password: String): Flow<Resource<String>>
+    suspend fun findUser(user:User): Flow<Resource<User>>
+    suspend fun registerUser(user:User): Flow<Resource<User>>
+    suspend fun authenticateUser(user:User): Flow<Resource<String>>
     suspend fun validateToken(token:String) :Flow<Resource<User>>
 }

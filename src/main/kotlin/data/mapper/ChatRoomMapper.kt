@@ -1,12 +1,11 @@
 package com.ktor.data.mapper
 
-import UserMapper.toUserDomain
 import com.ktor.data.model.chat.ChatRoomRequestDto
 import com.ktor.domain.model.ChatRoom
-import com.ktor.domain.model.Message
 import com.ktor.domain.model.User
 import org.bson.Document
 import org.bson.types.ObjectId
+import toUser
 
 object ChatRoomMapper {
 
@@ -17,9 +16,8 @@ object ChatRoomMapper {
             name = this.name,
             users = this.users.map { userDto ->
                 User(
-                    id = userDto.id,
                     username = userDto.username,
-                    email = userDto.email,
+                    password = userDto.password ?: ""
                 )
             }
         )
@@ -30,7 +28,7 @@ object ChatRoomMapper {
         return ChatRoom(
             id = this["_id"].toString(),
             name = this["name"] as String,
-            users = (this["users"] as? List<Document>)?.map { it.toUserDomain() } ?: emptyList()
+            users = (this["users"] as? List<Document>)?.map { it.toUser()} ?: emptyList()
         )
     }
 

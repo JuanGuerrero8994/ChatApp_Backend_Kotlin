@@ -8,7 +8,6 @@ import com.ktor.domain.repository.UserRepository
 import kotlinx.coroutines.flow.Flow
 
 class FindUserUseCase(private val repository: UserRepository) {
-    suspend operator fun invoke(usernmae: String): Flow<Resource<User?>> {
-        return repository.findUser(usernmae)
-    }
+    suspend operator fun invoke(user:User): Flow<Resource<User>> = repository.findUser(user)
+
 }

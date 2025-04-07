@@ -6,7 +6,6 @@ import com.ktor.domain.repository.UserRepository
 import kotlinx.coroutines.flow.Flow
 
 class ValidateTokenUseCase(private val repository: UserRepository) {
-    suspend operator fun invoke(token: String): Flow<Resource<User>> {
-        return repository.validateToken(token)
-    }
+    suspend operator fun invoke(token: String): Flow<Resource<User>> = repository.validateToken(token)
+
 }
