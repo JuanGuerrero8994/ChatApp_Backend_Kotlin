@@ -8,7 +8,7 @@ servers:
   - url: "http://localhost:8080"
 
 security:
-  - bearerAuth: []  # Aplica autenticación a todas las rutas por defecto
+  - bearerAuth: []
 
 paths:
   /users/register:
@@ -34,22 +34,23 @@ paths:
         content:
           application/json:
             schema:
-              type: "object"
+              type: object
+              required: [email, password]
               properties:
                 email:
-                  type: "string"
+                  type: string
                 password:
-                  type: "string"
+                  type: string
       responses:
         "200":
           description: "Authentication successful"
           content:
             application/json:
               schema:
-                type: "object"
+                type: object
                 properties:
                   token:
-                    type: "string"
+                    type: string
         "401":
           description: "Invalid credentials"
 
@@ -85,7 +86,7 @@ paths:
           content:
             application/json:
               schema:
-                type: "array"
+                type: array
                 items:
                   $ref: "#/components/schemas/Message"
     post:
@@ -115,48 +116,319 @@ paths:
           multipart/form-data:
             schema:
               type: object
+              required:
+                - file
               properties:
-                file:
-                  type: string
-                  format: binary
-                fileName:
-                  type: string
-                contentType:
-                  type: string
+                  file:
+                    type: string
+                    format: binary
+                  fileName:
+                    type: string
+                    description: Optional filename (will be taken from multipart metadata if not present)
+                  contentType:
+                    type: string
+                    description: Optional content type (will be inferred if not provided)
       responses:
-        "201":
+        "200":
           description: File uploaded successfully
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  fileId:
-                    type: string
+                allOf:
+                  - $ref: "#/components/schemas/FileResponse"
+                  - type: object
+                    properties:
+                      fileId:
+                        type: string
         "400":
           description: Invalid upload request
 
-    /file/{fileId}:
+  /file/{id}:
+    get:
+      summary: Get file by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: File
+          content:
+            video/mp4:
+              schema:
+                type: string
+                format: binary
+
+  openapi: "3.0.3"
+  info:
+    title: "Chat API"
+    description: "A simple chat API with user authentication and file upload/download."
+    version: "1.0.0"
+
+  servers:
+    - url: "http://localhost:8080"
+
+  security:
+    - bearerAuth: [ ]
+
+  paths:
+    /users/register:
+      post:
+        description: "Register a new user"
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserRequest"
+        responses:
+          "201":
+            description: "User successfully registered"
+          "400":
+            description: "Invalid user data"
+
+    /users/authenticate:
+      post:
+        description: "Authenticate user and return a token"
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ email, password ]
+                properties:
+                  email:
+                    type: string
+                  password:
+                    type: string
+        responses:
+          "200":
+            description: "Authentication successful"
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    token:
+                      type: string
+          "401":
+            description: "Invalid credentials"
+
+    /users/{username}:
       get:
         security:
           - bearerAuth: [ ]
-        summary: Download a file from GridFS by ID
+        description: "Retrieve a user by username"
         parameters:
-          - name: fileId
+          - name: "username"
+            in: "path"
+            required: true
+            schema:
+              type: "string"
+        responses:
+          "200":
+            description: "User found"
+            content:
+              application/json:
+                schema:
+                  $ref: "#/components/schemas/User"
+          "404":
+            description: "User not found"
+
+    /messages:
+      get:
+        security:
+          - bearerAuth: [ ]
+        description: "Retrieve all messages"
+        responses:
+          "200":
+            description: "List of all messages"
+            content:
+              application/json:
+                schema:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/Message"
+      post:
+        security:
+          - bearerAuth: [ ]
+        description: "Send a new message"
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageRequest"
+        responses:
+          "201":
+            description: "Message successfully created"
+          "400":
+            description: "Invalid message data"
+
+    /upload:
+      post:
+        security:
+          - bearerAuth: [ ]
+        summary: Upload a file to GridFS
+        requestBody:
+          required: true
+          content:
+            multipart/form-data:
+              schema:
+                type: object
+                required:
+                  - file
+                properties:
+                  file:
+                    type: string
+                    format: binary
+                  fileName:
+                    type: string
+                    description: Optional filename (will be taken from multipart metadata if not present)
+                  contentType:
+                    type: string
+                    description: Optional content type (will be inferred if not provided)
+        responses:
+          "200":
+            description: File uploaded successfully
+            content:
+              application/json:
+                schema:
+                  allOf:
+                    - $ref: "#/components/schemas/FileResponse"
+                    - type: object
+                      properties:
+                        fileId:
+                          type: string
+          "400":
+            description: Invalid upload request
+
+    /file/{id}:
+      get:
+        summary: Get file by ID
+        parameters:
+          - name: id
             in: path
             required: true
             schema:
               type: string
         responses:
-          "200":
-            description: File retrieved successfully
+          '200':
+            description: File (image or video)
             content:
-              application/octet-stream:
+              video/mp4:
                 schema:
                   type: string
                   format: binary
-          "404":
+              image/png:
+                schema:
+                  type: string
+                  format: binary
+              image/jpeg:
+                schema:
+                  type: string
+                  format: binary
+          '404':
             description: File not found
+
+  /file/content/{id}:
+    get:
+      summary: Get file by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: File (image or video)
+          content:
+            video/mp4:
+              schema:
+                type: string
+                format: binary
+            image/png:
+              schema:
+                type: string
+                format: binary
+            image/jpeg:
+              schema:
+                type: string
+                format: binary
+        '404':
+          description: File not found
+  components:
+    securitySchemes:
+      bearerAuth:
+        type: http
+        scheme: bearer
+        bearerFormat: JWT
+
+    schemas:
+      UserRequest:
+        type: object
+        required: [ username, password, email ]
+        properties:
+          username:
+            type: string
+          password:
+            type: string
+          email:
+            type: string
+            format: email
+
+      User:
+        type: object
+        properties:
+          id:
+            type: string
+          username:
+            type: string
+          email:
+            type: string
+            format: email
+
+      MessageRequest:
+        type: object
+        required: [ sender, message ]
+        properties:
+          sender:
+            type: string
+          message:
+            type: string
+          fileId:
+            type: string
+            nullable: true
+
+      Message:
+        type: object
+        properties:
+          id:
+            type: string
+          sender:
+            type: string
+          message:
+            type: string
+          timestamp:
+            type: integer
+            format: int64
+          fileId:
+            type: string
+            nullable: true
+
+      FileResponse:
+        type: object
+        properties:
+          id:
+            type: string
+          name:
+            type: string
+          contentType:
+            type: string
 
 
 components:
@@ -168,47 +440,62 @@ components:
 
   schemas:
     UserRequest:
-      type: "object"
+      type: object
+      required: [username, password, email]
       properties:
         username:
-          type: "string"
+          type: string
         password:
-          type: "string"
+          type: string
         email:
-          type: "string"
-          format: "email"
+          type: string
+          format: email
 
     User:
-      type: "object"
+      type: object
       properties:
         id:
-          type: "string"
+          type: string
         username:
-          type: "string"
+          type: string
         email:
-          type: "string"
-          format: "email"
+          type: string
+          format: email
 
     MessageRequest:
-      type: "object"
+      type: object
+      required: [sender, message]
       properties:
         sender:
-          type: "string"
+          type: string
         message:
-          type: "string"
+          type: string
+        fileId:
+          type: string
+          nullable: true
 
     Message:
-      type: "object"
+      type: object
       properties:
         id:
-          type: "string"
+          type: string
         sender:
-          type: "string"
+          type: string
         message:
-          type: "string"
+          type: string
         timestamp:
-          type: "integer"
-          format: "int64"
-        fileUrl:
-          type: "string"
+          type: integer
+          format: int64
+        fileId:
+          type: string
           nullable: true
+
+    FileResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        contentType:
+          type: string

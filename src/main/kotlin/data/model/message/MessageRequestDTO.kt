@@ -8,5 +8,5 @@ data class MessageRequestDto(
     val sender: String,
     val message: String,
     val timestamp: Long = System.currentTimeMillis(),
-    val fileUrl: String? = null
+    val fileId: String? = null
 )

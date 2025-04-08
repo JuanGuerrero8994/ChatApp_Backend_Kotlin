@@ -2,11 +2,12 @@ package com.ktor.plugins
 
 
 import com.ktor.domain.usecases.message.GetAllMessagesUseCase
-import com.ktor.domain.usecases.message.GetFileMessageUseCase
+import com.ktor.domain.usecases.file.GetFileUseCase
 import com.ktor.domain.usecases.message.SendMessageUseCase
-import com.ktor.domain.usecases.message.UploadFileMessageUseCase
+import com.ktor.domain.usecases.file.UploadFileUseCase
 import com.ktor.domain.usecases.user.*
 import com.ktor.plugins.routes.chatRoutes
+import com.ktor.plugins.routes.fileRoutes
 import com.ktor.plugins.routes.messagesRoutes
 import com.ktor.plugins.routes.userRoutes
 import io.ktor.server.application.*
@@ -23,13 +24,14 @@ fun Application.configureRouting() {
 
     val getAllMessagesUseCase: GetAllMessagesUseCase by inject()
     val sendMessageUseCase: SendMessageUseCase by inject()
-    val uploadFileUseCase :UploadFileMessageUseCase by inject()
-    val getFileUseCase: GetFileMessageUseCase by inject()
+    val uploadFileUseCase : UploadFileUseCase by inject()
+    val getFileUseCase: GetFileUseCase by inject()
 
     routing {
         userRoutes(registerUserUseCase, findUserUseCase, authenticateUserUseCase)
-        messagesRoutes(validateTokenUseCase, sendMessageUseCase, getAllMessagesUseCase,uploadFileUseCase,getFileUseCase)
-        chatRoutes(validateTokenUseCase)
+        messagesRoutes(validateTokenUseCase, sendMessageUseCase, getAllMessagesUseCase)
+        fileRoutes(validateTokenUseCase,uploadFileUseCase,getFileUseCase)
+       // chatRoutes(validateTokenUseCase)
     }
 
 

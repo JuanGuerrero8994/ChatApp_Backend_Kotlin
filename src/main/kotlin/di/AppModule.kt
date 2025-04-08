@@ -1,14 +1,16 @@
 package com.ktor.di
 
+import com.ktor.data.repository.FileRepositoryImpl
 import com.ktor.data.repository.MessageRepositoryImpl
 import com.ktor.data.repository.UserRepositoryImpl
 import com.ktor.data.service.GridFSService
+import com.ktor.domain.repository.FileRepository
 import com.ktor.domain.repository.MessageRepository
 import com.ktor.domain.repository.UserRepository
 import com.ktor.domain.usecases.message.GetAllMessagesUseCase
-import com.ktor.domain.usecases.message.GetFileMessageUseCase
+import com.ktor.domain.usecases.file.GetFileUseCase
 import com.ktor.domain.usecases.message.SendMessageUseCase
-import com.ktor.domain.usecases.message.UploadFileMessageUseCase
+import com.ktor.domain.usecases.file.UploadFileUseCase
 import com.ktor.domain.usecases.user.AuthenticateUserUseCase
 import com.ktor.domain.usecases.user.FindUserUseCase
 import com.ktor.domain.usecases.user.RegisterUserUseCase
@@ -24,18 +26,16 @@ import org.koin.dsl.module
 
 val appModule = module {
 
-    single {
-        HttpClient(CIO) {
-            install(WebSockets) {
+    single { HttpClient(CIO) { install(WebSockets) {
                 contentConverter = KotlinxWebsocketSerializationConverter(Json)
-                maxFrameSize = Long.MAX_VALUE
-            }
-        }
+                maxFrameSize = Long.MAX_VALUE }}
     }
+
     single<MongoDatabase> { connectToMongoDB(get()) }
-    single{ GridFSService(get())  }
+    single{GridFSService(get())  }
     single<MessageRepository> { MessageRepositoryImpl(get(),get()) }
     single<UserRepository> { UserRepositoryImpl(get()) }
+    single<FileRepository>{ FileRepositoryImpl(get())  }
 
 
     // USE CASE AUTH
@@ -48,8 +48,13 @@ val appModule = module {
     // USE CASE MESSAGES
     single { SendMessageUseCase(get()) }
     single { GetAllMessagesUseCase(get()) }
-    single { GetFileMessageUseCase(get()) }
-    single { UploadFileMessageUseCase(get()) }
+    //single { GetFileMessageUseCase(get()) }
+    //single { UploadFileMessageUseCase(get()) }
+
+
+    //USE CASES FILE
+    factory { UploadFileUseCase(get()) }
+    factory { GetFileUseCase(get()) }
 
 
     //USE CASE CHAT ROOM

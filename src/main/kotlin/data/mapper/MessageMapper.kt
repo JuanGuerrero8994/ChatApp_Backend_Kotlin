@@ -21,7 +21,7 @@ object MessageMapper {
             sender = sender,
             message = message,
             timestamp = timestamp,
-            fileUrl = fileUrl
+            fileId = fileId
         )
     }
 
@@ -31,7 +31,7 @@ object MessageMapper {
             sender = sender,
             message = message,
             timestamp = timestamp,
-            fileUrl = fileUrl
+            fileId = fileId
         )
     }
 
@@ -40,7 +40,7 @@ object MessageMapper {
         sender = this.getString("sender"),
         message = this.getString("message"),
         timestamp = this.getLong("timestamp"),
-        fileUrl = this.getString("fileUrl")
+        fileId = this.getString("fileUrl")
 
     )
 
@@ -53,6 +53,6 @@ fun Message.toMessageResponseDTO(): MessageResponseDto = MessageResponseDto(
     sender = this.sender ?: "",
     message = this.message ?: "",
     timestamp = this.timestamp ?: 0,
-    fileUrl = this.fileUrl ?: ""
+    fileId = this.fileId ?: ""
 
 )
