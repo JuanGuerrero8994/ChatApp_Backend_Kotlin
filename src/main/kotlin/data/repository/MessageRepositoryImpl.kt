@@ -56,7 +56,7 @@ class MessageRepositoryImpl(
                     sender = document.getString("sender"),
                     message = document.getString("message"),
                     timestamp = document.getLong("timestamp"),
-                    fileId = document.getString("fileId") // corregido
+                    fileId = document.getString("fileId")
                 )
             }.toList()
 

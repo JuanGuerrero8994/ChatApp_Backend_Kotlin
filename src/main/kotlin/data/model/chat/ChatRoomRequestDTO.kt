@@ -5,6 +5,8 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class ChatRoomRequestDto(
-    val name: String,
-    val users: List<UserRequestDTO>
+    val id:String?= null,
+    val name: String? = null,
+    val users: List<String>,
+    val createdAt: Long = System.currentTimeMillis()
 )

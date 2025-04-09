@@ -7,7 +7,9 @@ import org.bson.codecs.pojo.annotations.BsonId
 
 @Serializable
 data class ChatRoomResponseDto(
-    @BsonId @Contextual val id: String,
+    @BsonId @Contextual
+    val id: String,
     val name: String,
-    val users: List<UserResponseDTO>
+    val users: List<String>,
+    val createdAt:Long
 )

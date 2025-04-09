@@ -15,5 +15,5 @@ data class MessageResponseDto(
     val sender: String,
     val message: String,
     val timestamp: Long,
-    val fileId: String? = null // Cambiado de fileUrl a fileId
+    val fileId: String? = null
 )
