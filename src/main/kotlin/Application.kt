@@ -14,7 +14,6 @@ fun main(args: Array<String>) {
 }
 
 fun Application.module() {
-    configureWebSockets()
     install(Koin) {
         slf4jLogger()
         modules(appModule)
@@ -22,8 +21,8 @@ fun Application.module() {
         val app = this@module
         koin.loadModules(listOf(module { single { app } }))
     }
-
-    configureHTTP()
     configureSerialization()
+    configureHTTP()
+    configureWebSockets()
     configureRouting()
 }

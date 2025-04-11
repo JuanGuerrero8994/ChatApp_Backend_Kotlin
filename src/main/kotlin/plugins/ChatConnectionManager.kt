@@ -1,31 +1,33 @@
-package com.ktor.plugins
-
 import io.ktor.websocket.*
-import java.util.concurrent.ConcurrentHashMap
 
 class ChatConnectionManager {
 
-    private val connections = ConcurrentHashMap<String, WebSocketSession>()
+    private val roomConnections = mutableMapOf<String, MutableMap<String, WebSocketSession>>()
 
-    fun addConnection(username: String, session: WebSocketSession) {
-        connections[username] = session
+    fun addConnection(roomId: String, username: String, session: WebSocketSession) {
+        val room = roomConnections.getOrPut(roomId) { mutableMapOf() }
+        room[username] = session
+        println("✅ [$roomId] $username se unió a la sala")
     }
 
-    fun removeConnection(username: String) {
-        connections.remove(username)
-    }
+    fun removeConnection(roomId: String, username: String) {
+        roomConnections[roomId]?.remove(username)
+        println("👋 [$roomId] $username salió de la sala")
 
-    suspend fun broadcastMessage(sender: String, message: String) {
-        val textFrame = Frame.Text("$sender: $message")
-        connections.forEach { (user, session) ->
-            session.send(textFrame)
+        if (roomConnections[roomId]?.isEmpty() == true) {
+            roomConnections.remove(roomId)
         }
     }
 
-    suspend fun broadcastRawJson(messageJson: String) {
-        val textFrame = Frame.Text(messageJson)
-        connections.forEach { (_, session) ->
-            session.send(textFrame)
+
+    suspend fun broadcastToRoom(roomId: String, message: String) {
+        roomConnections[roomId]?.values?.forEach { session ->
+            session.send(Frame.Text(message))
         }
+        println("📤 [$roomId] Mensaje enviado a ${roomConnections[roomId]?.size ?: 0} usuario(s)")
+    }
+    // 🔍 NUEVO: obtener usuarios conectados en un room
+    fun getConnectedUsers(roomId: String): List<String> {
+        return roomConnections[roomId]?.keys?.toList() ?: emptyList()
     }
 }

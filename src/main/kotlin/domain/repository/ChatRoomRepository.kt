@@ -9,5 +9,6 @@ interface ChatRoomRepository {
     suspend fun getChatRoomById(id: String): Flow<Resource<ChatRoom?>>
     suspend fun getAllChatRooms(): Flow<Resource<List<ChatRoom>>>
     suspend fun addUserToChatRoom(chatRoomId: String, userId: String): Flow<Resource<Boolean>>
+    suspend fun removeUserFromChatRoom(chatRoomId: String, userId: String): Flow<Resource<Boolean>>
     suspend fun removeChatRoom(id: String): Flow<Resource<Boolean>>
 }

@@ -1,4 +1,4 @@
-package com.ktor.domain.usecases.message
+package com.ktor.domain.usecases.chat
 
 import com.ktor.core.Resource
 import com.ktor.domain.repository.ChatRoomRepository

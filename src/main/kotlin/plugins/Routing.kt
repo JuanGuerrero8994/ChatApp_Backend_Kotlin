@@ -1,20 +1,18 @@
 package com.ktor.plugins
 
 
-import com.ktor.domain.usecases.chat.CreateChatRoomUseCase
-import com.ktor.domain.usecases.chat.GetAllChatRoomUseCase
-import com.ktor.domain.usecases.chat.GetChatRoomByIdUseCase
+import ChatConnectionManager
+import com.ktor.domain.usecases.chat.*
 import com.ktor.domain.usecases.message.GetAllMessagesUseCase
 import com.ktor.domain.usecases.file.GetFileUseCase
 import com.ktor.domain.usecases.message.SendMessageUseCase
 import com.ktor.domain.usecases.file.UploadFileUseCase
-import com.ktor.domain.usecases.message.AddUserToChatRoomUseCase
-import com.ktor.domain.usecases.message.RemoveChatRoomUseCase
 import com.ktor.domain.usecases.user.*
 import com.ktor.plugins.routes.*
 import io.ktor.server.application.*
 import io.ktor.server.routing.*
 import org.koin.ktor.ext.inject
+import webSocketRoutes
 
 fun Application.configureRouting() {
 
@@ -35,7 +33,7 @@ fun Application.configureRouting() {
     val getChatRoomByIdUseCase: GetChatRoomByIdUseCase by inject()
     val addUserToChatRoomUseCase: AddUserToChatRoomUseCase by inject()
     val removeChatRoomUseCase: RemoveChatRoomUseCase by inject()
-
+    val removeUserFromChatRoomUseCase:RemoveUserFromChatRoomUseCase by inject()
 
     val chatConnectionManager = ChatConnectionManager()
 
@@ -43,8 +41,8 @@ fun Application.configureRouting() {
         userRoutes(registerUserUseCase, findUserUseCase, authenticateUserUseCase)
         messagesRoutes(validateTokenUseCase, sendMessageUseCase, getAllMessagesUseCase)
         fileRoutes(validateTokenUseCase, uploadFileUseCase, getFileUseCase)
+        chatRoomRoutes(validateTokenUseCase, createChatRoomUseCase, getAllChatRoomUseCase, getChatRoomByIdUseCase, addUserToChatRoomUseCase, removeChatRoomUseCase, removeUserFromChatRoomUseCase)
         webSocketRoutes(validateTokenUseCase, chatConnectionManager)
-        chatRoomRoutes(validateTokenUseCase, createChatRoomUseCase, getAllChatRoomUseCase, getChatRoomByIdUseCase, addUserToChatRoomUseCase, removeChatRoomUseCase)
     }
 
 

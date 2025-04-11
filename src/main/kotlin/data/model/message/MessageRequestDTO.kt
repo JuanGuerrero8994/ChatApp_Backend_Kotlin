@@ -6,7 +6,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class MessageRequestDto(
     val sender: String,
-    val message: String,
+    var message: String,
     val timestamp: Long = System.currentTimeMillis(),
     val fileId: String? = null
 )

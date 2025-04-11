@@ -4,12 +4,7 @@ import com.ktor.core.Resource
 import com.ktor.data.mapper.toDomain
 import com.ktor.data.mapper.toResponseDTO
 import com.ktor.data.model.chat.ChatRoomRequestDto
-import com.ktor.domain.model.ChatRoom
-import com.ktor.domain.usecases.chat.CreateChatRoomUseCase
-import com.ktor.domain.usecases.chat.GetAllChatRoomUseCase
-import com.ktor.domain.usecases.chat.GetChatRoomByIdUseCase
-import com.ktor.domain.usecases.message.AddUserToChatRoomUseCase
-import com.ktor.domain.usecases.message.RemoveChatRoomUseCase
+import com.ktor.domain.usecases.chat.*
 import com.ktor.domain.usecases.user.ValidateTokenUseCase
 import io.ktor.http.*
 import io.ktor.server.request.*
@@ -23,7 +18,8 @@ fun Route.chatRoomRoutes(
     getAllChatRoom: GetAllChatRoomUseCase,
     getChatRoomByIdUseCase: GetChatRoomByIdUseCase,
     addUserToChatRoomUseCase: AddUserToChatRoomUseCase,
-    removeChatRoomUseCase: RemoveChatRoomUseCase
+    removeChatRoomUseCase: RemoveChatRoomUseCase,
+    removeUserFromChatRoomUseCase: RemoveUserFromChatRoomUseCase
 ) {
 
     route("/chatrooms") {
@@ -69,7 +65,8 @@ fun Route.chatRoomRoutes(
             val chatRoomId = call.parameters["id"]
                 ?: return@post call.respond(HttpStatusCode.BadRequest, "Falta el ID de la sala")
 
-            val userId = call.receive<String>()
+            val userId = call.parameters["userId"]
+                ?: return@post call.respond(HttpStatusCode.BadRequest, "Falta el ID del User")
 
             when (val result = addUserToChatRoomUseCase(chatRoomId, userId).last()) {
                 is Resource.Success -> call.respond(HttpStatusCode.OK, result.data ?: "")
@@ -78,8 +75,22 @@ fun Route.chatRoomRoutes(
             }
         }
 
+        // ❌ Eliminar el usuario de la sala
+        delete("{id}/remove-user") {
+            val chatRoomId = call.parameters["id"]
+                ?: return@delete call.respond(HttpStatusCode.BadRequest, "Falta el ID de la sala")
+
+            val userId = call.parameters["userId"]
+                ?: return@delete call.respond(HttpStatusCode.BadRequest, "Falta el ID del usuario")
+
+            when (val result = removeUserFromChatRoomUseCase(chatRoomId, userId).last()) {
+                is Resource.Success -> call.respond(HttpStatusCode.OK, result.data ?: "Usuario eliminado correctamente")
+                is Resource.Error -> call.respond(HttpStatusCode.InternalServerError, result.message ?: "Error al eliminar usuario")
+                else -> call.respond(HttpStatusCode.InternalServerError, "Error inesperado")
+            }
+        }
         // ❌ Eliminar sala
-        delete("{id}") {
+        delete("{id}/") {
             val id = call.parameters["id"]
                 ?: return@delete call.respond(HttpStatusCode.BadRequest, "Falta el ID de la sala")
 
@@ -89,5 +100,7 @@ fun Route.chatRoomRoutes(
                 else -> call.respond(HttpStatusCode.InternalServerError, false)
             }
         }
+
+
     }
 }

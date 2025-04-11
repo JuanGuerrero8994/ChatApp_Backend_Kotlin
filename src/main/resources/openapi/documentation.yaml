@@ -288,6 +288,40 @@ paths:
         '500':
           description: Internal server error
 
+  /chatrooms/{id}/:
+    delete:
+      tags: [ ChatRoom ]
+      summary: Delete chat room by ID
+      description: Permanently deletes a chat room using its ID.
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The ID of the chat room to delete
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Chat room deleted successfully
+          content:
+            application/json:
+              schema:
+                type: boolean
+        '404':
+          description: Chat room not found
+          content:
+            application/json:
+              schema:
+                type: boolean
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: boolean
+
   /chatrooms/{id}/add-user:
     post:
       tags: [ ChatRoom ]
@@ -322,13 +356,15 @@ paths:
         '500':
           description: Internal server error
 
-  /chatrooms/{id}/:
+
+
+  /chatrooms/{id}/remove-user:
     delete:
       tags: [ ChatRoom ]
       security:
         - bearerAuth: [ ]
-      summary: Remove chatroom
-      description: Delete a chat room by ID.
+      summary: Remove user from chatroom
+      description: Removes a user from the specified chatroom by ID.
       parameters:
         - name: id
           in: path
@@ -336,15 +372,21 @@ paths:
           description: The ID of the chatroom
           schema:
             type: string
+        - name: userId
+          in: query
+          required: true
+          description: The ID of the user to remove
+          schema:
+            type: string
       responses:
         '200':
-          description: Chatroom deleted successfully
+          description: User removed from chatroom successfully
           content:
             application/json:
               schema:
                 type: boolean
         '400':
-          description: Missing chatroom ID
+          description: Missing chatroom or user ID
           content:
             application/json:
               schema:

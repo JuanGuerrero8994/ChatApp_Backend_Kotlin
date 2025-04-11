@@ -34,7 +34,6 @@ fun Route.userRoutes(
             }
         }
 
-
         get("/{username}") {
 
             val userDTO = call.receive<UserRequestDTO>()

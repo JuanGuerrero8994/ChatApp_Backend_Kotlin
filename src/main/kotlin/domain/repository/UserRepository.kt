@@ -1,8 +1,6 @@
 package com.ktor.domain.repository
 
 import com.ktor.core.Resource
-import com.ktor.data.model.user.UserRequestDTO
-import com.ktor.data.model.user.UserResponseDTO
 import com.ktor.domain.model.User
 import kotlinx.coroutines.flow.Flow
 

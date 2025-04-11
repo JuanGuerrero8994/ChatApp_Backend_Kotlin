@@ -9,15 +9,11 @@ import com.ktor.domain.repository.ChatRoomRepository
 import com.ktor.domain.repository.FileRepository
 import com.ktor.domain.repository.MessageRepository
 import com.ktor.domain.repository.UserRepository
-import com.ktor.domain.usecases.chat.CreateChatRoomUseCase
-import com.ktor.domain.usecases.chat.GetAllChatRoomUseCase
-import com.ktor.domain.usecases.chat.GetChatRoomByIdUseCase
+import com.ktor.domain.usecases.chat.*
 import com.ktor.domain.usecases.message.GetAllMessagesUseCase
 import com.ktor.domain.usecases.file.GetFileUseCase
 import com.ktor.domain.usecases.message.SendMessageUseCase
 import com.ktor.domain.usecases.file.UploadFileUseCase
-import com.ktor.domain.usecases.message.AddUserToChatRoomUseCase
-import com.ktor.domain.usecases.message.RemoveChatRoomUseCase
 import com.ktor.domain.usecases.user.AuthenticateUserUseCase
 import com.ktor.domain.usecases.user.FindUserUseCase
 import com.ktor.domain.usecases.user.RegisterUserUseCase
@@ -75,4 +71,6 @@ val appModule = module {
     factory { GetChatRoomByIdUseCase(get()) }
     factory { AddUserToChatRoomUseCase(get()) }
     factory { RemoveChatRoomUseCase(get()) }
+    factory { RemoveUserFromChatRoomUseCase(get()) }
+
 }
