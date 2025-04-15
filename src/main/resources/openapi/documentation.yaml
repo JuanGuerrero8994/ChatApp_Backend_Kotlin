@@ -1,0 +1,576 @@
+openapi: "3.0.3"
+info:
+  title: "Chat API"
+  description: "A simple chat API with user authentication and file upload/download."
+  version: "1.0.0"
+
+servers:
+  - url: "http://localhost:8080"
+
+security:
+  - bearerAuth: []
+
+
+tags:
+  - name: "User"
+    description: "Operations related to user registration, authentication, and retrieval."
+  - name: "Messages"
+    description: "Operations for sending and retrieving chat messages."
+  - name: "Files"
+    description: "Operations for uploading and downloading files."
+  - name: "ChatRoom"
+    description: "Operations for creating and retrieving chat rooms."
+
+paths:
+  /users/register:
+    post:
+      tags: [User]
+      summary: Register a new user
+      description: "Register a new user"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserRequest"
+      responses:
+        "201":
+          description: "User successfully registered"
+        "400":
+          description: "Invalid user data"
+
+  /users/authenticate:
+    post:
+      tags: [User]
+      summary: Authenticate user and return a token
+      description: "Authenticate user and return a token"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+      responses:
+        "200":
+          description: "Authentication successful"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+        "401":
+          description: "Invalid credentials"
+
+  /users/{username}:
+    get:
+      tags: [User]
+      security:
+        - bearerAuth: []
+      summary: Retrieve a user by username
+      description: "Retrieve a user by username"
+      parameters:
+        - name: "username"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+      responses:
+        "200":
+          description: "User found"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "404":
+          description: "User not found"
+
+  /messages:
+    get:
+      tags: [ Messages ]
+      security:
+        - bearerAuth: []
+      summary: Retrieve all messages
+      description: "Retrieve all messages"
+      responses:
+        "200":
+          description: "List of all messages"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Message"
+    post:
+      tags: [ Messages ]
+      security:
+        - bearerAuth: []
+      summary: Send a new message
+      description: "Send a new message"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MessageRequest"
+      responses:
+        "201":
+          description: "Message successfully created"
+        "400":
+          description: "Invalid message data"
+
+  /{id}/messages:
+    get:
+      summary: Obtener los mensajes de una sala específica
+      description: Este endpoint permite obtener todos los mensajes de una sala de chat específica utilizando el ID de la sala.
+      operationId: getMessagesByChatRoomId
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: El ID de la sala de chat para obtener sus mensajes.
+          schema:
+           type: string
+      responses:
+        '200':
+          description: Mensajes obtenidos exitosamente
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MessageResponseDTO'
+        '400':
+          description: Solicitud incorrecta debido a falta del ID de la sala
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Falta el ID de la sala"
+        '500':
+          description: Error al obtener los mensajes
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Error al obtener los mensajes"
+
+
+  /upload:
+    post:
+      tags: [ Files ]
+      security:
+        - bearerAuth: []
+      summary: Upload a file to GridFS
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+              properties:
+                file:
+                  type: string
+                  format: binary
+                fileName:
+                  type: string
+                contentType:
+                  type: string
+      responses:
+        "200":
+          description: File uploaded successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/FileResponse"
+                  - type: object
+                    properties:
+                      fileId:
+                        type: string
+        "400":
+          description: Invalid upload request
+
+  /file/{id}:
+    get:
+      tags: [ Files ]
+      summary: Get file by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: File (image or video)
+          content:
+            video/mp4:
+              schema:
+                type: string
+                format: binary
+            image/png:
+              schema:
+                type: string
+                format: binary
+            image/jpeg:
+              schema:
+                type: string
+                format: binary
+        '404':
+          description: File not found
+
+  /file/content/{id}:
+    get:
+      tags: [ Files ]
+      summary: Get file content by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: File content (image or video)
+          content:
+            video/mp4:
+              schema:
+                type: string
+                format: binary
+            image/png:
+              schema:
+                type: string
+                format: binary
+            image/jpeg:
+              schema:
+                type: string
+                format: binary
+        '404':
+          description: File not found
+
+  /chatrooms:
+    post:
+      tags: [ ChatRoom ]
+      security:
+        - bearerAuth: [ ]
+      summary: Create a new chatroom
+      description: Creates a new chatroom and returns the result.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChatRoomRequest"
+      responses:
+        '200':
+          description: Chatroom successfully created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChatRoomResponse"
+        '500':
+          description: Internal server error
+
+
+    get:
+      tags: [ ChatRoom ]
+      security:
+        - bearerAuth: [ ]
+      summary: Get list of chat rooms
+      description: Retrieves all chat rooms.
+      responses:
+        '200':
+          description: List of chat rooms
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ChatRoomResponse"
+        '500':
+          description: Internal server error
+
+  /chatrooms/{id}:
+    get:
+      tags: [ ChatRoom ]
+      summary: Get chat room by ID
+      description: Retrieve details of a chat room using its ID.
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Chat room found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChatRoomResponse"
+        '404':
+          description: Chat room not found
+        '500':
+          description: Internal server error
+
+  /chatrooms/{id}/:
+    delete:
+      tags: [ ChatRoom ]
+      summary: Delete chat room by ID
+      description: Permanently deletes a chat room using its ID.
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The ID of the chat room to delete
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Chat room deleted successfully
+          content:
+            application/json:
+              schema:
+                type: boolean
+        '404':
+          description: Chat room not found
+          content:
+            application/json:
+              schema:
+                type: boolean
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: boolean
+
+  /chatrooms/{id}/add-user:
+    post:
+      tags: [ ChatRoom ]
+      security:
+        - bearerAuth: [ ]
+      summary: Add a user to a chatroom
+      description: Adds a user to the specified chatroom using the chatroom ID from the path and the user ID from the query parameter.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The ID of the chatroom
+          schema:
+            type: string
+        - name: userId
+          in: query
+          required: true
+          description: The ID of the user to be added
+          schema:
+            type: string
+      responses:
+        '200':
+          description: User successfully added to the chatroom
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatRoomResponse'
+        '400':
+          description: Missing chatroom ID or user ID
+        '404':
+          description: Chatroom or user not found
+        '500':
+          description: Internal server error
+
+
+
+  /chatrooms/{id}/remove-user:
+    delete:
+      tags: [ ChatRoom ]
+      security:
+        - bearerAuth: [ ]
+      summary: Remove user from chatroom
+      description: Removes a user from the specified chatroom by ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The ID of the chatroom
+          schema:
+            type: string
+        - name: userId
+          in: query
+          required: true
+          description: The ID of the user to remove
+          schema:
+            type: string
+      responses:
+        '200':
+          description: User removed from chatroom successfully
+          content:
+            application/json:
+              schema:
+                type: boolean
+        '400':
+          description: Missing chatroom or user ID
+          content:
+            application/json:
+              schema:
+                type: boolean
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: boolean
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    UserRequest:
+      type: object
+      required: [username, password, email]
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+        email:
+          type: string
+          format: email
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+        username:
+          type: string
+        email:
+          type: string
+          format: email
+
+    MessageRequest:
+      type: object
+      required: [sender, message]
+      properties:
+        sender:
+          type: string
+        message:
+          type: string
+        fileId:
+          type: string
+          nullable: true
+
+      MessageResponseDTO:
+        type: object
+        properties:
+          id:
+            type: string
+            description: El ID único del mensaje
+            example: "msg123"
+          senderId:
+            type: string
+            description: El ID del remitente
+            example: "user456"
+          content:
+            type: string
+            description: El contenido del mensaje
+            example: "Hola, ¿cómo estás?"
+          timestamp:
+            type: string
+            format: date-time
+            description: La fecha y hora en que se envió el mensaje
+            example: "2025-04-15T12:00:00Z"
+    Message:
+      type: object
+      properties:
+        id:
+          type: string
+        sender:
+          type: string
+        message:
+          type: string
+        timestamp:
+          type: integer
+          format: int64
+        fileId:
+          type: string
+          nullable: true
+
+
+
+    FileResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        contentType:
+          type: string
+
+    ChatRoomRequest:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+        users:
+          type: array
+          items:
+            type: string
+
+    ChatRoomResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        users:
+          type: array
+          items:
+            type: string
+        createdAt:
+          type: long
+
+    ChatRoom:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        users:
+          type: array
+          items:
+            type: string
+        createdAd:
+          type: long
+
+
+
+

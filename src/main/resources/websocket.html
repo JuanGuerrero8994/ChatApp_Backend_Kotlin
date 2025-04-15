@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Chat Tipo WhatsApp</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f0f2f5;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    .chat {
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+      width: 400px;
+      height: 600px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .header {
+      background: #075e54;
+      color: white;
+      padding: 10px;
+      text-align: center;
+      font-weight: bold;
+    }
+
+    .messages {
+      flex: 1;
+      padding: 10px;
+      overflow-y: auto;
+      background-color: #e5ddd5;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .message {
+      max-width: 70%;
+      padding: 10px;
+      border-radius: 10px;
+      word-wrap: break-word;
+      display: inline-block;
+    }
+
+    .sent {
+      align-self: flex-end;
+      background-color: #dcf8c6;
+      border-bottom-right-radius: 0;
+    }
+
+    .received {
+      align-self: flex-start;
+      background-color: white;
+      border-bottom-left-radius: 0;
+    }
+
+    .input-group {
+      display: flex;
+      padding: 10px;
+      background: #fff;
+      border-top: 1px solid #ccc;
+    }
+
+    .input-group input {
+      flex: 1;
+      padding: 8px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+
+    .input-group button {
+      background-color: #128c7e;
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      margin-left: 5px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="chat">
+    <div class="header" id="userHeader">Cargando usuario...</div>
+    <div class="messages" id="chatLog"></div>
+    <div class="input-group">
+      <input type="text" id="msgInput" placeholder="Escribe un mensaje...">
+      <button onclick="sendMessage()">Enviar</button>
+    </div>
+  </div>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const rawToken = params.get("token");
+
+    if (!rawToken) {
+      alert("Token no proporcionado en la URL.");
+      throw new Error("Falta el token en la URL");
+    }
+
+    const token = decodeURIComponent(rawToken);
+    const payloadBase64 = token.split('.')[1];
+    const payloadJson = atob(payloadBase64);
+    const payload = JSON.parse(payloadJson);
+    const currentUser = payload.sub.split("@")[0];
+
+    document.getElementById("userHeader").innerText = `👤 ${currentUser}`;
+
+    const roomId = "67f68247912e873bec58ca8d";
+    const ws = new WebSocket(`ws://localhost:8080/chat/${roomId}?token=${encodeURIComponent("Bearer " + token)}`);
+
+    const chatLog = document.getElementById("chatLog");
+
+    function appendMessage(data) {
+      const wrapperDiv = document.createElement("div");
+      wrapperDiv.classList.add("message");
+    
+      const isSender = data.sender === currentUser || data.sender.includes(currentUser);
+      wrapperDiv.classList.add(isSender ? "sent" : "received");
+    
+      // Si no soy yo, agrego el nombre del remitente
+      if (!isSender) {
+        const senderDiv = document.createElement("div");
+        senderDiv.style.fontSize = "0.75rem";
+        senderDiv.style.fontWeight = "bold";
+        senderDiv.style.marginBottom = "3px";
+        senderDiv.style.color = "#555";
+        senderDiv.innerText = data.sender;
+        wrapperDiv.appendChild(senderDiv);
+      }
+    
+      const messageDiv = document.createElement("div");
+      messageDiv.innerText = data.message;
+    
+      wrapperDiv.appendChild(messageDiv);
+      chatLog.appendChild(wrapperDiv);
+      chatLog.scrollTop = chatLog.scrollHeight;
+    }
+
+    ws.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      appendMessage(data);
+    };
+
+    function sendMessage() {
+      const input = document.getElementById("msgInput");
+      const message = input.value.trim();
+      if (!message) return;
+
+      const payload = {
+        sender: currentUser,
+        message: message,
+        timestamp: Date.now()
+      };
+
+      ws.send(JSON.stringify(payload)); // Solo enviamos, no duplicamos
+      input.value = "";
+    }
+
+    ws.onopen = () => console.log("🟢 Conectado como", currentUser);
+    ws.onerror = (e) => console.error("❌ Error WebSocket", e);
+    ws.onclose = () => console.warn("🔴 Conexión cerrada");
+  </script>
+</body>
+</html>
