@@ -5,6 +5,7 @@ import com.mongodb.client.MongoDatabase
 import com.mongodb.client.gridfs.GridFSBucket
 import com.mongodb.client.gridfs.GridFSBuckets
 import com.mongodb.client.gridfs.model.GridFSUploadOptions
+import org.bson.BsonValue
 import org.bson.Document
 import org.bson.types.ObjectId
 import org.litote.kmongo.util.idValue
@@ -51,7 +52,9 @@ class GridFSService(database: MongoDatabase) {
             }
 
             val outputStream = ByteArrayOutputStream()
-            bucket.downloadToStream(fileInfo.id as ObjectId, outputStream)
+            fileInfo.id.let {
+                bucket.downloadToStream(it as BsonValue, outputStream)
+            }
 
             val name = fileInfo.filename
             val contentType = fileInfo.metadata?.getString("contentType") ?: "application/octet-stream"
