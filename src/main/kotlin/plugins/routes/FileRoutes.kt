@@ -82,6 +82,7 @@ fun Route.fileRoutes(
             return@get
         }*/
 
+
         val fileId = call.parameters["id"]
         if (fileId.isNullOrEmpty()) {
             call.respond(HttpStatusCode.BadRequest, "Missing file ID")

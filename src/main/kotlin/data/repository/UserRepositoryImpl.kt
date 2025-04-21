@@ -1,7 +1,7 @@
 package com.ktor.data.repository
 
- import com.ktor.core.JWTUtil
-import com.ktor.core.Resource
+import com.ktor.core.ApiResponse
+import com.ktor.core.JWTUtil
 import com.ktor.domain.model.User
 import com.ktor.domain.repository.UserRepository
 import com.mongodb.client.MongoCollection
@@ -16,8 +16,7 @@ class UserRepositoryImpl(database: MongoDatabase) : UserRepository {
 
     private val collection: MongoCollection<Document> = database.getCollection("users")
 
-    override suspend fun registerUser(user: User): Flow<Resource<User>> = flow {
-        emit(Resource.Loading())
+    override suspend fun registerUser(user: User): Flow<ApiResponse<User>> = flow {
         try {
             val doc = Document().apply {
                 put("username", user.username)
@@ -25,31 +24,38 @@ class UserRepositoryImpl(database: MongoDatabase) : UserRepository {
                 put("passwordHash", BCrypt.hashpw(user.password, BCrypt.gensalt()))
             }
             collection.insertOne(doc)
-            emit(Resource.Success(doc.toUser()))
+
+            // Emitir respuesta exitosa con el usuario registrado
+            emit(ApiResponse(data = doc.toUser(), status = "success", messages = listOf("User registered successfully"), code = 200))
         } catch (e: Exception) {
-            emit(Resource.Error("Error registering user", e))
+            // Emitir error si algo sale mal
+            emit(ApiResponse(status = "error", messages = listOf("Error registering user: ${e.message}"), code = 500))
         }
     }
 
-
-    override suspend fun findUser(user: User): Flow<Resource<User>> = flow {
-        emit(Resource.Loading())
+    override suspend fun findUser(user: User): Flow<ApiResponse<User>> = flow {
         try {
+            // Emitir estado de loading
+
             val document = collection.find(Document("username", user.username)).firstOrNull()
 
             if (document != null) {
-                emit(Resource.Success(user))
+                // Emitir respuesta exitosa si se encuentra el usuario
+                emit(ApiResponse(data = user, status = "success", messages = listOf("User found"), code = 200))
             } else {
-                emit(Resource.Error("User not found"))
+                // Emitir error si el usuario no es encontrado
+                emit(ApiResponse<User>(status = "error", messages = listOf("User not found"), code = 404))
             }
         } catch (e: Exception) {
-            emit(Resource.Error("Error retrieving user", e))
+            // Emitir error en caso de fallo
+            emit(ApiResponse<User>(status = "error", messages = listOf("Error retrieving user: ${e.message}"), code = 500))
         }
     }
 
-    override suspend fun authenticateUser(user:User): Flow<Resource<String>> = flow {
-        emit(Resource.Loading())
+    override suspend fun authenticateUser(user: User): Flow<ApiResponse<String>> = flow {
         try {
+            // Emitir estado de loading
+
             val document = collection.find(Document("email", user.email)).firstOrNull()
 
             if (document != null) {
@@ -58,42 +64,52 @@ class UserRepositoryImpl(database: MongoDatabase) : UserRepository {
                     val username = document.getString("email")
 
                     val token = JWTUtil.generateToken(username)
-                    emit(Resource.Success(token))
+
+                    // Emitir respuesta exitosa con el token
+                    emit(ApiResponse(data = token, status = "success", messages = listOf("Authentication successful"), code = 200))
                 } else {
-                    emit(Resource.Error("Invalid credentials"))
+                    // Emitir error de credenciales inválidas
+                    emit(ApiResponse<String>(status = "error", messages = listOf("Invalid credentials"), code = 401))
                 }
             } else {
-                emit(Resource.Error("User not found"))
+                // Emitir error si el usuario no existe
+                emit(ApiResponse<String>(status = "error", messages = listOf("User not found"), code = 404))
             }
         } catch (e: Exception) {
-            emit(Resource.Error("Error during authentication", e))
+            // Emitir error en caso de fallo
+            emit(ApiResponse<String>(status = "error", messages = listOf("Error during authentication: ${e.message}"), code = 500))
         }
     }
-    override suspend fun validateToken(token: String): Flow<Resource<User>> = flow {
-        emit(Resource.Loading())
+
+    override suspend fun validateToken(token: String): Flow<ApiResponse<User>> = flow {
         try {
-            val email = JWTUtil.validateToken(token) // 🔄 Extraer username del token
+            // Emitir estado de loading
+
+            val email = JWTUtil.validateToken(token) // Extraer el email del token
 
             if (email != null) {
                 val document = collection.find(Document("email", email)).firstOrNull()
                 if (document != null) {
-
                     val user = User(
                         id = document.getObjectId("_id").toString(),
                         username = document.getString("username"),
                         email = document.getString("email"),
                         password = document.getString("passwordHash")
                     )
-                    emit(Resource.Success(user))
+
+                    // Emitir respuesta exitosa con el usuario
+                    emit(ApiResponse(data = user, status = "success", messages = listOf("Token validated"), code = 200))
                 } else {
-                    emit(Resource.Error("User not found"))
+                    // Emitir error si el usuario no es encontrado
+                    emit(ApiResponse<User>(status = "error", messages = listOf("User not found"), code = 404))
                 }
             } else {
-                emit(Resource.Error("Invalid token"))
+                // Emitir error si el token no es válido
+                emit(ApiResponse<User>(status = "error", messages = listOf("Invalid token"), code = 401))
             }
         } catch (e: Exception) {
-            emit(Resource.Error("Error validating token", e))
+            // Emitir error en caso de fallo
+            emit(ApiResponse<User>(status = "error", messages = listOf("Error validating token: ${e.message}"), code = 500))
         }
     }
-
 }

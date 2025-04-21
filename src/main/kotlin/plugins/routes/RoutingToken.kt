@@ -8,16 +8,17 @@ import kotlinx.coroutines.flow.last
 
 
 suspend fun ApplicationCall.getAuthenticatedUser(validateTokenUseCase: ValidateTokenUseCase): User? {
-    // 1. Intenta obtener el token del header Authorization
     val authHeader = request.headers["Authorization"]
     val token = when {
         !authHeader.isNullOrBlank() && authHeader.startsWith("Bearer ") -> authHeader.removePrefix("Bearer ")
-        else -> request.queryParameters["token"]?.removePrefix("Bearer ") // 2. Si no está, busca en query params
+        else -> request.queryParameters["token"]?.removePrefix("Bearer ")
     } ?: return null
 
-    // 3. Valida el token
-    return when (val response = validateTokenUseCase(token).last()) {
-        is Resource.Success -> response.data
-        else -> null
+    val response = validateTokenUseCase(token).last()
+
+    return if (response.status == "success" && response.data != null) {
+        response.data
+    } else {
+        null
     }
 }

@@ -51,7 +51,8 @@ class GridFSService(database: MongoDatabase) {
             }
 
             val outputStream = ByteArrayOutputStream()
-            bucket.downloadToStream(fileInfo.id as ObjectId, outputStream)
+
+            bucket.downloadToStream(fileInfo.id, outputStream)
 
             val name = fileInfo.filename
             val contentType = fileInfo.metadata?.getString("contentType") ?: "application/octet-stream"
@@ -59,8 +60,10 @@ class GridFSService(database: MongoDatabase) {
 
             println("✅ Archivo recuperado: $name ($contentType), ${bytes.size} bytes")
 
+            val objectId = (fileInfo.id as? org.bson.BsonObjectId)?.value ?: fileInfo.id
+
             File(
-                id = fileInfo.id.idValue.toString(),
+                id = objectId.toString(),
                 name = name,
                 contentType = contentType,
                 bytes = bytes
