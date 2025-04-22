@@ -22,9 +22,9 @@ fun Route.userRoutes(
     route("/users") {
         post("/register") {
             val userDTO = call.receive<UserRequestDTO>()
-            val domainUser = userDTO.toDomain()
+            val user = userDTO.toDomain()
 
-            val result = registerUserUseCase(domainUser).last()
+            val result = registerUserUseCase(user).last()
 
             if (result.status == "success") {
                 call.respond(HttpStatusCode.Created, result)

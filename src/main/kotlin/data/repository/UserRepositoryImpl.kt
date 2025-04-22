@@ -44,11 +44,11 @@ class UserRepositoryImpl(database: MongoDatabase) : UserRepository {
                 emit(ApiResponse(data = user, status = "success", messages = listOf("User found"), code = 200))
             } else {
                 // Emitir error si el usuario no es encontrado
-                emit(ApiResponse<User>(status = "error", messages = listOf("User not found"), code = 404))
+                emit(ApiResponse(status = "error", messages = listOf("User not found"), code = 404))
             }
         } catch (e: Exception) {
             // Emitir error en caso de fallo
-            emit(ApiResponse<User>(status = "error", messages = listOf("Error retrieving user: ${e.message}"), code = 500))
+            emit(ApiResponse(status = "error", messages = listOf("Error retrieving user: ${e.message}"), code = 500))
         }
     }
 
@@ -61,7 +61,8 @@ class UserRepositoryImpl(database: MongoDatabase) : UserRepository {
             if (document != null) {
                 val storedPasswordHash = document.getString("passwordHash") ?: ""
                 if (BCrypt.checkpw(user.password, storedPasswordHash)) {
-                    val username = document.getString("email")
+
+                    val username = document.getString("username")
 
                     val token = JWTUtil.generateToken(username)
 
@@ -69,15 +70,15 @@ class UserRepositoryImpl(database: MongoDatabase) : UserRepository {
                     emit(ApiResponse(data = token, status = "success", messages = listOf("Authentication successful"), code = 200))
                 } else {
                     // Emitir error de credenciales inválidas
-                    emit(ApiResponse<String>(status = "error", messages = listOf("Invalid credentials"), code = 401))
+                    emit(ApiResponse(status = "error", messages = listOf("Invalid credentials"), code = 401))
                 }
             } else {
                 // Emitir error si el usuario no existe
-                emit(ApiResponse<String>(status = "error", messages = listOf("User not found"), code = 404))
+                emit(ApiResponse(status = "error", messages = listOf("User not found"), code = 404))
             }
         } catch (e: Exception) {
             // Emitir error en caso de fallo
-            emit(ApiResponse<String>(status = "error", messages = listOf("Error during authentication: ${e.message}"), code = 500))
+            emit(ApiResponse(status = "error", messages = listOf("Error during authentication: ${e.message}"), code = 500))
         }
     }
 
