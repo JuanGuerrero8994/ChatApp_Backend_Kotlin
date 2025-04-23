@@ -7,5 +7,9 @@ import com.ktor.domain.repository.UserRepository
 import kotlinx.coroutines.flow.Flow
 
 class AuthenticateUserUseCase(private val repository: UserRepository) {
-    suspend operator fun invoke(user:User): Flow<ApiResponse<String>> = repository.authenticateUser(user)
+    suspend operator fun invoke(user: User, newPassword: String? = null, action: AuthAction) = when (action) {
+        AuthAction.LOGIN -> repository.authenticateUser(user)
+        AuthAction.REGISTER -> repository.registerUser(user)
+        AuthAction.FORGET_PASSWORD -> repository.changePassword(user, newPassword!!)
+    }
 }

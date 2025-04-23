@@ -17,7 +17,6 @@ import com.ktor.domain.usecases.file.UploadFileUseCase
 import com.ktor.domain.usecases.message.GetMessagesByChatRoomIdUseCase
 import com.ktor.domain.usecases.user.AuthenticateUserUseCase
 import com.ktor.domain.usecases.user.FindUserUseCase
-import com.ktor.domain.usecases.user.RegisterUserUseCase
 import com.ktor.domain.usecases.user.ValidateTokenUseCase
 import com.ktor.plugins.connectToMongoDB
 import com.mongodb.client.MongoDatabase
@@ -49,7 +48,6 @@ val appModule = module {
 
     // USE CASE AUTH
     factory { ValidateTokenUseCase(get()) }
-    factory { RegisterUserUseCase(get()) }
     factory { FindUserUseCase(get()) }
     factory { AuthenticateUserUseCase(get()) }
 

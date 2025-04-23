@@ -17,7 +17,6 @@ import webSocketRoutes
 
 fun Application.configureRouting() {
 
-    val registerUserUseCase: RegisterUserUseCase by inject()
     val findUserUseCase: FindUserUseCase by inject()
     val authenticateUserUseCase: AuthenticateUserUseCase by inject()
     val validateTokenUseCase: ValidateTokenUseCase by inject()
@@ -41,7 +40,7 @@ fun Application.configureRouting() {
     val chatConnectionManager = ChatConnectionManager()
 
     routing {
-        userRoutes(registerUserUseCase, findUserUseCase, authenticateUserUseCase)
+        userRoutes(findUserUseCase, authenticateUserUseCase)
         messagesRoutes(validateTokenUseCase, sendMessageUseCase, getAllMessagesUseCase, getMessagesByChatRoomIdUseCase)
         fileRoutes(validateTokenUseCase, uploadFileUseCase, getFileUseCase)
         chatRoomRoutes(

@@ -92,6 +92,29 @@ paths:
         "404":
           description: "User not found"
 
+  /users/change-password:
+    post:
+      tags: [ User ]
+      security:
+        - bearerAuth: [ ]
+      summary: Change user password
+      description: "Allows the authenticated user to change their password."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRequest'
+      responses:
+        '200':
+          description: Password changed successfully
+        '400':
+          description: Invalid password or request
+        '401':
+          description:
+        '500':
+          description: Server error
+
   /messages:
     get:
       tags: [ Messages ]
