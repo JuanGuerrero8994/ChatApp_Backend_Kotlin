@@ -10,7 +10,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import org.bson.Document
 import org.mindrot.jbcrypt.BCrypt
-import toUser
 
 class UserRepositoryImpl(database: MongoDatabase) : UserRepository {
 
@@ -26,10 +25,10 @@ class UserRepositoryImpl(database: MongoDatabase) : UserRepository {
             collection.insertOne(doc)
 
             // Emitir respuesta exitosa con el usuario registrado
-            emit(ApiResponse(status = "success", messages = listOf("User registered successfully"), code = 200))
+            emit(ApiResponse(status = "Success", messages = listOf("User registered successfully"), code = 200))
         } catch (e: Exception) {
             // Emitir error si algo sale mal
-            emit(ApiResponse(status = "error", messages = listOf("Error registering user: ${e.message}"), code = 500))
+            emit(ApiResponse(status = "Error", messages = listOf("Error registering user: ${e.message}"), code = 500))
         }
     }
 
@@ -41,14 +40,14 @@ class UserRepositoryImpl(database: MongoDatabase) : UserRepository {
 
             if (document != null) {
                 // Emitir respuesta exitosa si se encuentra el usuario
-                emit(ApiResponse(data = user, status = "success", messages = listOf("User found"), code = 200))
+                emit(ApiResponse(data = user, status = "Success", messages = listOf("User found"), code = 200))
             } else {
                 // Emitir error si el usuario no es encontrado
-                emit(ApiResponse(status = "error", messages = listOf("User not found"), code = 404))
+                emit(ApiResponse(status = "Error", messages = listOf("User not found"), code = 404))
             }
         } catch (e: Exception) {
             // Emitir error en caso de fallo
-            emit(ApiResponse(status = "error", messages = listOf("Error retrieving user: ${e.message}"), code = 500))
+            emit(ApiResponse(status = "Error", messages = listOf("Error retrieving user: ${e.message}"), code = 500))
         }
     }
 
@@ -67,18 +66,18 @@ class UserRepositoryImpl(database: MongoDatabase) : UserRepository {
                     val token = JWTUtil.generateToken(username)
 
                     // Emitir respuesta exitosa con el token
-                    emit(ApiResponse(data = token, status = "success", messages = listOf("Authentication successful"), code = 200))
+                    emit(ApiResponse(data = token, status = "Success", messages = listOf("Authentication successful"), code = 200))
                 } else {
                     // Emitir error de credenciales inválidas
-                    emit(ApiResponse(status = "error", messages = listOf("Invalid credentials"), code = 401))
+                    emit(ApiResponse(status = "Error", messages = listOf("Invalid credentials"), code = 401))
                 }
             } else {
                 // Emitir error si el usuario no existe
-                emit(ApiResponse(status = "error", messages = listOf("User not found"), code = 404))
+                emit(ApiResponse(status = "Error", messages = listOf("User not found"), code = 404))
             }
         } catch (e: Exception) {
             // Emitir error en caso de fallo
-            emit(ApiResponse(status = "error", messages = listOf("Error during authentication: ${e.message}"), code = 500))
+            emit(ApiResponse(status = "Error", messages = listOf("Error during authentication: ${e.message}"), code = 500))
         }
     }
 
@@ -86,17 +85,31 @@ class UserRepositoryImpl(database: MongoDatabase) : UserRepository {
         try {
             val userDoc = collection.find(Document("email", user.email)).firstOrNull()
 
-            val storedHash = userDoc?.getString("passwordHash")
+
+            if(userDoc==null){
+                emit(
+                    ApiResponse(
+                        status = "Error",
+                        messages = listOf("User Not Found"),
+                        code = 404
+                    )
+                )
+                return@flow
+            }
+
+            val storedHash = userDoc.getString("passwordHash")
 
             if (storedHash == null || !BCrypt.checkpw(user.password, storedHash)) {
                 emit(
                     ApiResponse(
-                        status = "error",
+                        status = "Error",
                         messages = listOf("Incorrect email or password."),
                         code = 401
                     )
                 )
+                return@flow
             }
+
 
             val newHash = BCrypt.hashpw(newPassword, BCrypt.gensalt())
 
@@ -108,7 +121,7 @@ class UserRepositoryImpl(database: MongoDatabase) : UserRepository {
             if (updateResult.modifiedCount > 0) {
                 emit(
                     ApiResponse(
-                        status = "success",
+                        status = "Success",
                         messages = listOf("Password changed successfully."),
                         code = 200
                     )
@@ -116,7 +129,7 @@ class UserRepositoryImpl(database: MongoDatabase) : UserRepository {
             } else {
                 emit(
                     ApiResponse(
-                        status = "error",
+                        status = "Success",
                         messages = listOf("Password update failed. Try again."),
                         code = 500
                     )
@@ -126,7 +139,7 @@ class UserRepositoryImpl(database: MongoDatabase) : UserRepository {
         } catch (e: Exception) {
             emit(
                 ApiResponse(
-                    status = "error",
+                    status = "Error",
                     messages = listOf("Unexpected error: ${e.localizedMessage ?: "Unknown error"}"),
                     code = 500
                 )
@@ -151,18 +164,18 @@ class UserRepositoryImpl(database: MongoDatabase) : UserRepository {
                     )
 
                     // Emitir respuesta exitosa con el usuario
-                    emit(ApiResponse(data = user, status = "success", messages = listOf("Token validated"), code = 200))
+                    emit(ApiResponse(data = user, status = "Success", messages = listOf("Token validated"), code = 200))
                 } else {
                     // Emitir error si el usuario no es encontrado
-                    emit(ApiResponse(status = "error", messages = listOf("User not found"), code = 404))
+                    emit(ApiResponse(status = "Error", messages = listOf("User not found"), code = 404))
                 }
             } else {
                 // Emitir error si el token no es válido
-                emit(ApiResponse(status = "error", messages = listOf("Invalid token"), code = 401))
+                emit(ApiResponse(status = "Error", messages = listOf("Invalid token"), code = 401))
             }
         } catch (e: Exception) {
             // Emitir error en caso de fallo
-            emit(ApiResponse(status = "error", messages = listOf("Error validating token: ${e.message}"), code = 500))
+            emit(ApiResponse(status = "Error", messages = listOf("Error validating token: ${e.message}"), code = 500))
         }
     }
 }

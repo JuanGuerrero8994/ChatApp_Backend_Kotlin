@@ -1,6 +1,6 @@
 package com.ktor.data.repository
 
-import com.ktor.core.Resource
+import com.ktor.core.ApiResponse
 import com.ktor.data.mapper.toDomain
 import com.ktor.data.model.message.MessageResponseDto
 import com.ktor.domain.model.Message
@@ -15,9 +15,9 @@ class MessageRepositoryImpl(database: MongoDatabase) : MessageRepository {
 
     private val collection: MongoCollection<Document> = database.getCollection("messages")
 
-    override suspend fun sendMessage(message: Message): Flow<Resource<String>> = flow {
+    override suspend fun sendMessage(message: Message): Flow<ApiResponse<String>> = flow {
         try {
-            emit(Resource.Loading())
+            emit(ApiResponse(status = "Success", messages = listOf("Sending message..."), code = 200))
 
             // Crear el documento a insertar
             val document = Document().apply {
@@ -30,21 +30,20 @@ class MessageRepositoryImpl(database: MongoDatabase) : MessageRepository {
                     put("fileId", it)
                 }
 
-                // ❗ Agregá esta línea para guardar el chatRoomId
+                // Agregar chatRoomId
                 put("chatRoomId", message.chatRoomId)
-
             }
 
             collection.insertOne(document)
-            emit(Resource.Success("Message sent successfully"))
+            emit(ApiResponse(status = "Success", messages = listOf("Message sent successfully"), code = 200))
 
         } catch (e: Exception) {
-            emit(Resource.Error("Error inserting the message: ${e.message}"))
+            emit(ApiResponse(status = "Error", messages = listOf("Error inserting the message: ${e.message}"), code = 500))
         }
     }
 
-    override suspend fun getAllMessages(): Flow<Resource<List<Message>>> = flow {
-        emit(Resource.Loading())
+    override suspend fun getAllMessages(): Flow<ApiResponse<List<Message>>> = flow {
+        emit(ApiResponse(status = "Loading", messages = listOf("Loading messages..."), code = 200))
 
         try {
             // Obtener los documentos de MongoDB y mapearlos a DTO
@@ -60,16 +59,15 @@ class MessageRepositoryImpl(database: MongoDatabase) : MessageRepository {
             }.toList()
 
             val messageList = docList.map { it.toDomain() }
-            emit(Resource.Success(messageList))
+            emit(ApiResponse(data = messageList, status = "Success", messages = listOf("Messages retrieved successfully"), code = 200))
 
         } catch (e: Exception) {
-            emit(Resource.Error("Error getting messages: ${e.message}"))
+            emit(ApiResponse(status = "Error", messages = listOf("Error getting messages: ${e.message}"), code = 500))
         }
     }
 
-
-    override suspend fun getMessagesByChatRoomId(chatRoomId: String): Flow<Resource<List<Message>>> = flow {
-        emit(Resource.Loading())
+    override suspend fun getMessagesByChatRoomId(chatRoomId: String): Flow<ApiResponse<List<Message>>> = flow {
+        emit(ApiResponse(status = "Loading", messages = listOf("Loading messages..."), code = 200))
         try {
             val docList = collection.find(Document("chatRoomId", chatRoomId)).map { document ->
                 MessageResponseDto(
@@ -83,12 +81,10 @@ class MessageRepositoryImpl(database: MongoDatabase) : MessageRepository {
             }.toList()
 
             val messageList = docList.map { it.toDomain() }
-            emit(Resource.Success(messageList))
+            emit(ApiResponse(data = messageList, status = "Success", messages = listOf("Messages retrieved successfully for chatRoomId=$chatRoomId"), code = 200))
 
         } catch (e: Exception) {
-            emit(Resource.Error("Error getting messages for chatRoomId=$chatRoomId: ${e.message}"))
+            emit(ApiResponse(status = "Error", messages = listOf("Error getting messages for chatRoomId=$chatRoomId: ${e.message}"), code = 500))
         }
-
     }
-
 }

@@ -26,7 +26,7 @@ fun Route.userRoutes(
 
             val result = authenticateUserUseCase.invoke(user = user, action = AuthAction.REGISTER).last()
 
-            if (result.status == "success") {
+            if (result.status == "Success") {
                 call.respond(HttpStatusCode.Created, result)
             } else {
                 call.respond(HttpStatusCode.fromValue(result.code ?: 500), result)
@@ -40,7 +40,7 @@ fun Route.userRoutes(
 
             val result = authenticateUserUseCase.invoke(user = user, action = AuthAction.LOGIN).last()
 
-            if (result.status == "success") {
+            if (result.status == "Success") {
                 call.respond(HttpStatusCode.OK, result)
             } else {
                 call.respond(HttpStatusCode.fromValue(result.code ?: 401), result)
@@ -56,7 +56,7 @@ fun Route.userRoutes(
                     HttpStatusCode.BadRequest, ApiResponse<Unit>(
                         data = null,
                         messages = listOf("Username text cannot be empty."),
-                        status = "error",
+                        status = "Error",
                         code = 400
                     )
                 )
@@ -65,7 +65,7 @@ fun Route.userRoutes(
 
             val result = findUserUseCase(domainUser).last()
 
-            if (result.status == "success") {
+            if (result.status == "Success") {
                 call.respond(HttpStatusCode.OK, result)
             } else {
                 call.respond(HttpStatusCode.fromValue(result.code ?: 500), result)
@@ -83,7 +83,7 @@ fun Route.userRoutes(
                 call.respond(
                     HttpStatusCode.BadRequest, ApiResponse<Unit>(
                         messages = listOf("email text cannot be empty."),
-                        status = "error",
+                        status = "Error",
                         code = 400
                     )
                 )
@@ -93,7 +93,7 @@ fun Route.userRoutes(
                 call.respond(
                     HttpStatusCode.BadRequest, ApiResponse<Unit>(
                         messages = listOf("Password text cannot be empty."),
-                        status = "error",
+                        status = "Error",
                         code = 400
                     )
                 )
@@ -104,7 +104,7 @@ fun Route.userRoutes(
                 call.respond(
                     HttpStatusCode.BadRequest, ApiResponse<Unit>(
                         messages = listOf("Password text cannot be empty."),
-                        status = "error",
+                        status = "Error",
                         code = 400
                     )
                 )
@@ -115,17 +115,23 @@ fun Route.userRoutes(
                 call.respond(
                     HttpStatusCode.BadRequest, ApiResponse<Unit>(
                         messages = listOf("New password text cannot be empty."),
-                        status = "error",
+                        status = "Error",
                         code = 400
                     )
                 )
                 return@post
             }
 
-            if (result.status == "success") {
-                call.respond(HttpStatusCode.OK, result)
-            } else {
-                call.respond(HttpStatusCode.fromValue(result.code ?: 500), result)
+            when (result.status) {
+                "Success" -> {
+                    call.respond(HttpStatusCode.OK, result)
+                }
+                "Error" -> {
+                    call.respond(HttpStatusCode.fromValue(result.code ?: 500),result)
+                }
+                else -> {
+                    call.respond(HttpStatusCode.fromValue(result.code ?: 500), result)
+                }
             }
         }
 
