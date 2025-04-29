@@ -41,10 +41,9 @@ fun Application.configureRouting() {
 
     routing {
         userRoutes(findUserUseCase, authenticateUserUseCase)
-        messagesRoutes(validateTokenUseCase, sendMessageUseCase, getAllMessagesUseCase, getMessagesByChatRoomIdUseCase)
-        fileRoutes(validateTokenUseCase, uploadFileUseCase, getFileUseCase)
+        messagesRoutes( sendMessageUseCase, getAllMessagesUseCase, getMessagesByChatRoomIdUseCase)
+        fileRoutes(uploadFileUseCase, getFileUseCase)
         chatRoomRoutes(
-            validateTokenUseCase,
             createChatRoomUseCase,
             getAllChatRoomUseCase,
             getChatRoomByIdUseCase,

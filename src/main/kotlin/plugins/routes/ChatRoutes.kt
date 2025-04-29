@@ -13,7 +13,6 @@ import io.ktor.server.routing.*
 import kotlinx.coroutines.flow.last
 
 fun Route.chatRoomRoutes(
-    validateTokenUseCase: ValidateTokenUseCase,
     chatRoomUseCase: CreateChatRoomUseCase,
     getAllChatRoom: GetAllChatRoomUseCase,
     getChatRoomByIdUseCase: GetChatRoomByIdUseCase,

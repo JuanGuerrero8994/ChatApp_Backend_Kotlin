@@ -77,7 +77,7 @@ private suspend fun DefaultWebSocketServerSession.sendPreviousMessages(
 ) {
     try {
         val messages = getMessagesByChatRoomIdUseCase(roomId).last()
-        if (messages is Resource.Success<*> && !messages.data.isNullOrEmpty()) {
+        if (!messages.data.isNullOrEmpty()) {
             println("💬 Enviando ${messages.data.size} mensajes previos")
             messages.data.forEach { message ->
                 val json = Json.encodeToString(
@@ -127,15 +127,11 @@ private fun CoroutineScope.processIncomingMessage(
         }
 
         val result = sendMessageUseCase(domainMessage).last()
-        if (result is Resource.Success<*>) {
-            println("💾 Mensaje guardado")
-            val responseJson = Json.encodeToString(
-                MessageResponseDto.serializer(),
-                domainMessage.toMessageResponseDTO()
-            )
-            chatConnectionManager.broadcastToRoom(roomId, responseJson)
-        } else {
-            println("⚠️ No se pudo guardar el mensaje: ${result ?: "Desconocido"}")
-        }
+        println("💾 Mensaje guardado")
+        val responseJson = Json.encodeToString(
+            MessageResponseDto.serializer(),
+            domainMessage.toMessageResponseDTO()
+        )
+        chatConnectionManager.broadcastToRoom(roomId, responseJson)
     }
 }

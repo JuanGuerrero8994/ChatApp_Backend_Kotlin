@@ -20,19 +20,11 @@ import kotlinx.io.readByteArray
 import java.util.*
 
 fun Route.fileRoutes(
-    validateTokenUseCase:ValidateTokenUseCase,
     uploadFileUseCase: UploadFileUseCase,
     getFileUseCase: GetFileUseCase
 ) {
 
     post("/upload") {
-        /*val user = call.getAuthenticatedUser(validateTokenUseCase)
-
-        if (user == null) {
-            call.respond(HttpStatusCode.Unauthorized, "Invalid or missing token")
-            return@post
-        }*/
-
         val multipart = call.receiveMultipart()
         var fileBytes: ByteArray? = null
         var fileName: String? = null
@@ -74,13 +66,6 @@ fun Route.fileRoutes(
     }
 
     get("/file/{id}") { //✅ GET /file/{id} → Devuelve metadata de la imagen (nombre, tipo, URL para verla).
-
-        /*val user = call.getAuthenticatedUser(validateTokenUseCase)
-
-        if (user == null) {
-            call.respond(HttpStatusCode.Unauthorized, "Invalid or missing token")
-            return@get
-        }*/
 
 
         val fileId = call.parameters["id"]

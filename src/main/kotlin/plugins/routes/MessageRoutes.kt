@@ -17,7 +17,6 @@ import io.ktor.server.routing.*
 import kotlinx.coroutines.flow.last
 
 fun Route.messagesRoutes(
-    validateTokenUseCase: ValidateTokenUseCase,
     sendMessageUseCase: SendMessageUseCase,
     getAllMessagesUseCase: GetAllMessagesUseCase,
     getMessagesByChatRoomIdUseCase: GetMessagesByChatRoomIdUseCase
@@ -25,36 +24,16 @@ fun Route.messagesRoutes(
 
     route("/messages") {
         get {
-            val user = call.getAuthenticatedUser(validateTokenUseCase)
-
-            if (user == null) {
-                call.respond(HttpStatusCode.Unauthorized, "Invalid or missing token")
-                return@get
+            val result = getAllMessagesUseCase().last()
+            if (result.status == "Success") {
+                call.respond(HttpStatusCode.OK, result.data?.map {  it.toMessageResponseDTO() } ?: emptyList())
+            } else {
+                call.respond(HttpStatusCode.fromValue(result.code ?: 500), result.messages)
             }
 
-            when (val result = getAllMessagesUseCase().last()) {
-                is Resource.Success -> {
-                    val response = result.data?.toList()?.map { it.toMessageResponseDTO() }
-                    call.respond(HttpStatusCode.OK, response ?: emptyList<Message>())
-                }
-
-                is Resource.Error -> call.respond(
-                    HttpStatusCode.InternalServerError,
-                    result.message ?: "Unknown error"
-                )
-
-                else -> call.respond(HttpStatusCode.OK, emptyList<Message>())
-            }
         }
 
         post {
-            val user = call.getAuthenticatedUser(validateTokenUseCase)
-
-            if (user == null) {
-                call.respond(HttpStatusCode.Unauthorized, "Invalid or missing token")
-                return@post
-            }
-
             val messageDTO = call.receive<MessageRequestDto>()
 
             if (messageDTO.message.isBlank()) {
@@ -65,14 +44,11 @@ fun Route.messagesRoutes(
 
             val message = messageDTO.toDomain()
 
-            when (val response = sendMessageUseCase(message).last()) {
-                is Resource.Success -> call.respond(HttpStatusCode.OK, response.data ?: emptyList<Message>())
-                is Resource.Error -> call.respond(
-                    HttpStatusCode.InternalServerError,
-                    response.message ?: "Unknown error"
-                )
-
-                else -> call.respond(HttpStatusCode.OK, emptyList<Message>())
+            val result = sendMessageUseCase(message).last()
+            if (result.status == "Success") {
+                call.respond(HttpStatusCode.OK, result)
+            } else {
+                call.respond(HttpStatusCode.fromValue(result.code ?: 500), result.messages)
             }
         }
 
@@ -81,13 +57,11 @@ fun Route.messagesRoutes(
             val chatRoomId = call.parameters["id"]
                 ?: return@get call.respond(HttpStatusCode.BadRequest, "Falta el ID de la sala")
 
-            when (val result = getMessagesByChatRoomIdUseCase(chatRoomId).last()) {
-                is Resource.Success -> {
-                    val response = result.data?.map { it.toMessageResponseDTO() } ?: emptyList()
-                    call.respond(HttpStatusCode.OK, response)
-                }
-                is Resource.Error -> call.respond(HttpStatusCode.InternalServerError, result.message ?: "Error al obtener los mensajes")
-                else -> call.respond(HttpStatusCode.InternalServerError, "")
+            val result = getMessagesByChatRoomIdUseCase(chatRoomId).last()
+            if (result.status == "Success") {
+                call.respond(HttpStatusCode.OK, result.data?.map {  it.toMessageResponseDTO() } ?: emptyList())
+            } else {
+                call.respond(HttpStatusCode.fromValue(result.code ?: 500), result.messages)
             }
         }
 
