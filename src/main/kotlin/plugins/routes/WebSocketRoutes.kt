@@ -3,11 +3,11 @@ import com.ktor.data.mapper.toDomain
 import com.ktor.data.mapper.toMessageResponseDTO
 import com.ktor.data.model.message.MessageRequestDto
 import com.ktor.data.model.message.MessageResponseDto
+import com.ktor.domain.model.Message
 import com.ktor.domain.usecases.file.GetFileUseCase
-import com.ktor.domain.usecases.message.GetMessagesByChatRoomIdUseCase
-import com.ktor.domain.usecases.message.SendMessageUseCase
-import com.ktor.domain.usecases.user.ValidateTokenUseCase
-import com.ktor.plugins.routes.getAuthenticatedUser
+import com.ktor.domain.usecases.message.MessageAction
+import com.ktor.domain.usecases.message.MessageUseCases
+import com.ktor.domain.usecases.token.ValidateTokenUseCase
 import io.ktor.server.routing.*
 import io.ktor.server.websocket.*
 import io.ktor.websocket.*
@@ -19,8 +19,7 @@ import kotlinx.serialization.json.Json
 
 fun Route.webSocketRoutes(
     validateTokenUseCase: ValidateTokenUseCase,
-    sendMessageUseCase: SendMessageUseCase,
-    getMessagesByChatRoomIdUseCase: GetMessagesByChatRoomIdUseCase,
+    messageUseCases: MessageUseCases,
     getFileUseCase: GetFileUseCase,
     chatConnectionManager: ChatConnectionManager,
 ) {
@@ -29,42 +28,49 @@ fun Route.webSocketRoutes(
             println("📡 WebSocket iniciado")
 
             val roomId = call.parameters["roomId"]
+
             if (roomId.isNullOrBlank()) {
                 closeWithReason("Missing roomId")
                 return@webSocket
             }
 
-            val user = call.getAuthenticatedUser(validateTokenUseCase)
-            if (user == null || user.username.isNullOrBlank()) {
+            val token = call.request.queryParameters["token"]
+
+
+            val result = validateTokenUseCase(token!!).last()
+
+            if (result != null) {
+                val user = result
+
+                println("✅ Usuario autenticado: ${user.username}")
+                chatConnectionManager.addConnection(roomId, user.username!!, this)
+
+                sendPreviousMessages(roomId, messageUseCases)
+
+                println("👥 Usuarios conectados: ${chatConnectionManager.getConnectedUsers(roomId)}")
+
+                try {
+                    incoming.consumeEach { frame ->
+                        if (frame is Frame.Text) {
+                            processIncomingMessage(
+                                frame.readText(),
+                                user.username,
+                                roomId,
+                                getFileUseCase,
+                                messageUseCases,
+                                chatConnectionManager
+                            )
+                        }
+                    }
+                } catch (e: Exception) {
+                    println("❌ Error WebSocket: ${e.localizedMessage}")
+                } finally {
+                    chatConnectionManager.removeConnection(roomId, user.username)
+                    println("👋 Conexión cerrada para ${user.username}")
+                }
+            } else {
                 closeWithReason("Invalid Token")
                 return@webSocket
-            }
-
-            println("✅ Usuario autenticado: ${user.username}")
-            chatConnectionManager.addConnection(roomId, user.username, this)
-
-            sendPreviousMessages(roomId, getMessagesByChatRoomIdUseCase)
-
-            println("👥 Usuarios conectados: ${chatConnectionManager.getConnectedUsers(roomId)}")
-
-            try {
-                incoming.consumeEach { frame ->
-                    if (frame is Frame.Text) {
-                        processIncomingMessage(
-                            frame.readText(),
-                            user.username,
-                            roomId,
-                            getFileUseCase,
-                            sendMessageUseCase,
-                            chatConnectionManager
-                        )
-                    }
-                }
-            } catch (e: Exception) {
-                println("❌ Error WebSocket: ${e.localizedMessage}")
-            } finally {
-                chatConnectionManager.removeConnection(roomId, user.username)
-                println("👋 Conexión cerrada para ${user.username}")
             }
         }
     }
@@ -73,11 +79,12 @@ fun Route.webSocketRoutes(
 
 private suspend fun DefaultWebSocketServerSession.sendPreviousMessages(
     roomId: String,
-    getMessagesByChatRoomIdUseCase: GetMessagesByChatRoomIdUseCase
+    messageUseCases: MessageUseCases,
 ) {
     try {
-        val messages = getMessagesByChatRoomIdUseCase(roomId).last()
-        if (!messages.data.isNullOrEmpty()) {
+        val messages = messageUseCases.invoke(roomId = roomId, action = MessageAction.GET_MESSAGES_BY_CHAT_ROOM_ID).last()
+
+        if ((messages.data as List<Message>).isNotEmpty()) {
             println("💬 Enviando ${messages.data.size} mensajes previos")
             messages.data.forEach { message ->
                 val json = Json.encodeToString(
@@ -87,7 +94,7 @@ private suspend fun DefaultWebSocketServerSession.sendPreviousMessages(
                 send(Frame.Text(json))
             }
         } else {
-            println("⚠️ No se encontraron mensajes previos o hubo error: ${(messages as? Resource.Error<*>)?.message}")
+            println("⚠️ No se encontraron mensajes previos o hubo error: ${(messages.messages)}")
         }
     } catch (e: Exception) {
         println("❌ Error al cargar mensajes previos: ${e.localizedMessage}")
@@ -104,8 +111,8 @@ private fun CoroutineScope.processIncomingMessage(
     username: String,
     roomId: String,
     getFileUseCase: GetFileUseCase,
-    sendMessageUseCase: SendMessageUseCase,
-    chatConnectionManager: ChatConnectionManager
+    messageUseCases: MessageUseCases,
+    chatConnectionManager: ChatConnectionManager,
 ) {
     val messageRequest = try {
         Json.decodeFromString<MessageRequestDto>(messageText)
@@ -126,7 +133,7 @@ private fun CoroutineScope.processIncomingMessage(
             }
         }
 
-        val result = sendMessageUseCase(domainMessage).last()
+        val result = messageUseCases.invoke(message = domainMessage, action = MessageAction.SEND_MESSAGE).last()
         println("💾 Mensaje guardado")
         val responseJson = Json.encodeToString(
             MessageResponseDto.serializer(),

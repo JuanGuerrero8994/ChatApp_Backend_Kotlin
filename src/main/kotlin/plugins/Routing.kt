@@ -3,11 +3,10 @@ package com.ktor.plugins
 
 import ChatConnectionManager
 import com.ktor.domain.usecases.chat.*
-import com.ktor.domain.usecases.message.GetAllMessagesUseCase
 import com.ktor.domain.usecases.file.GetFileUseCase
-import com.ktor.domain.usecases.message.SendMessageUseCase
 import com.ktor.domain.usecases.file.UploadFileUseCase
-import com.ktor.domain.usecases.message.GetMessagesByChatRoomIdUseCase
+import com.ktor.domain.usecases.message.MessageUseCases
+import com.ktor.domain.usecases.token.ValidateTokenUseCase
 import com.ktor.domain.usecases.user.*
 import com.ktor.plugins.routes.*
 import io.ktor.server.application.*
@@ -17,14 +16,10 @@ import webSocketRoutes
 
 fun Application.configureRouting() {
 
-    val findUserUseCase: FindUserUseCase by inject()
     val authenticateUserUseCase: AuthenticateUserUseCase by inject()
     val validateTokenUseCase: ValidateTokenUseCase by inject()
 
-
-    val getAllMessagesUseCase: GetAllMessagesUseCase by inject()
-    val sendMessageUseCase: SendMessageUseCase by inject()
-    val getMessagesByChatRoomIdUseCase: GetMessagesByChatRoomIdUseCase by inject()
+    val messageUseCases :MessageUseCases by inject()
 
     val uploadFileUseCase: UploadFileUseCase by inject()
     val getFileUseCase: GetFileUseCase by inject()
@@ -40,24 +35,11 @@ fun Application.configureRouting() {
     val chatConnectionManager = ChatConnectionManager()
 
     routing {
-        userRoutes(findUserUseCase, authenticateUserUseCase)
-        messagesRoutes( sendMessageUseCase, getAllMessagesUseCase, getMessagesByChatRoomIdUseCase)
+        userRoutes(authenticateUserUseCase)
         fileRoutes(uploadFileUseCase, getFileUseCase)
-        chatRoomRoutes(
-            createChatRoomUseCase,
-            getAllChatRoomUseCase,
-            getChatRoomByIdUseCase,
-            addUserToChatRoomUseCase,
-            removeChatRoomUseCase,
-            removeUserFromChatRoomUseCase
-        )
-        webSocketRoutes(
-            validateTokenUseCase,
-            sendMessageUseCase,
-            getMessagesByChatRoomIdUseCase,
-            getFileUseCase,
-            chatConnectionManager
-        )
+        messagesRoutes(messageUseCases)
+        chatRoomRoutes(createChatRoomUseCase, getAllChatRoomUseCase, getChatRoomByIdUseCase, addUserToChatRoomUseCase, removeChatRoomUseCase, removeUserFromChatRoomUseCase)
+        webSocketRoutes(validateTokenUseCase = validateTokenUseCase, messageUseCases = messageUseCases , getFileUseCase =  getFileUseCase, chatConnectionManager = chatConnectionManager)
     }
 
 

@@ -1,15 +1,12 @@
 package com.ktor.plugins.routes
 
 
-import com.ktor.core.Resource
 import com.ktor.data.mapper.toDomain
 import com.ktor.data.mapper.toMessageResponseDTO
 import com.ktor.data.model.message.MessageRequestDto
-import com.ktor.domain.model.Message
-import com.ktor.domain.usecases.message.GetAllMessagesUseCase
-import com.ktor.domain.usecases.message.GetMessagesByChatRoomIdUseCase
-import com.ktor.domain.usecases.message.SendMessageUseCase
-import com.ktor.domain.usecases.user.ValidateTokenUseCase
+import com.ktor.domain.usecases.chat.GetChatRoomByIdUseCase
+import com.ktor.domain.usecases.message.MessageAction
+import com.ktor.domain.usecases.message.MessageUseCases
 import io.ktor.http.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
@@ -17,16 +14,14 @@ import io.ktor.server.routing.*
 import kotlinx.coroutines.flow.last
 
 fun Route.messagesRoutes(
-    sendMessageUseCase: SendMessageUseCase,
-    getAllMessagesUseCase: GetAllMessagesUseCase,
-    getMessagesByChatRoomIdUseCase: GetMessagesByChatRoomIdUseCase
+    messageUseCases: MessageUseCases
 ) {
 
     route("/messages") {
         get {
-            val result = getAllMessagesUseCase().last()
+            val result = messageUseCases.invoke(action = MessageAction.GET_ALL_MESSAGES).last()
             if (result.status == "Success") {
-                call.respond(HttpStatusCode.OK, result.data?.map {  it.toMessageResponseDTO() } ?: emptyList())
+                call.respond(HttpStatusCode.OK, result.messages)
             } else {
                 call.respond(HttpStatusCode.fromValue(result.code ?: 500), result.messages)
             }
@@ -44,7 +39,23 @@ fun Route.messagesRoutes(
 
             val message = messageDTO.toDomain()
 
-            val result = sendMessageUseCase(message).last()
+            val result = messageUseCases.invoke(message, action = MessageAction.SEND_MESSAGE).last()
+            if (result.status == "Success") {
+                call.respond(HttpStatusCode.OK, result)
+            } else {
+                call.respond(HttpStatusCode.fromValue(result.code ?: 500), result.messages)
+            }
+        }
+        get("{roomId}") {
+            val roomId = call.parameters["roomId"]
+
+            if (roomId.isNullOrBlank()) {
+                call.respond(HttpStatusCode.BadRequest, "Missing roomId")
+                return@get
+            }
+
+            val result = messageUseCases.invoke(roomId = roomId, action = MessageAction.GET_MESSAGES_BY_CHAT_ROOM_ID).last()
+
             if (result.status == "Success") {
                 call.respond(HttpStatusCode.OK, result)
             } else {
@@ -52,18 +63,6 @@ fun Route.messagesRoutes(
             }
         }
 
-        // 📥 Obtener mensajes de una sala específica
-        get("{id}/messages") {
-            val chatRoomId = call.parameters["id"]
-                ?: return@get call.respond(HttpStatusCode.BadRequest, "Falta el ID de la sala")
-
-            val result = getMessagesByChatRoomIdUseCase(chatRoomId).last()
-            if (result.status == "Success") {
-                call.respond(HttpStatusCode.OK, result.data?.map {  it.toMessageResponseDTO() } ?: emptyList())
-            } else {
-                call.respond(HttpStatusCode.fromValue(result.code ?: 500), result.messages)
-            }
-        }
 
     }
 }

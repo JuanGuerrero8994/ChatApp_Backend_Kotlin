@@ -4,17 +4,14 @@ import com.ktor.core.Resource
 import com.ktor.data.mapper.toDomain
 import com.ktor.data.mapper.toResponse
 import com.ktor.data.model.file.FileRequestDTO
-import com.ktor.domain.model.File
 import com.ktor.domain.usecases.file.GetFileUseCase
 import com.ktor.domain.usecases.file.UploadFileUseCase
-import com.ktor.domain.usecases.user.ValidateTokenUseCase
 import io.ktor.http.*
 import io.ktor.http.content.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.utils.io.*
-import io.ktor.utils.io.core.*
 import kotlinx.coroutines.flow.last
 import kotlinx.io.readByteArray
 import java.util.*

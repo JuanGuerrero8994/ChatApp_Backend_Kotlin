@@ -32,24 +32,6 @@ class UserRepositoryImpl(database: MongoDatabase) : UserRepository {
         }
     }
 
-    override suspend fun findUser(user: User): Flow<ApiResponse<User>> = flow {
-        try {
-            // Emitir estado de loading
-
-            val document = collection.find(Document("username", user.username)).firstOrNull()
-
-            if (document != null) {
-                // Emitir respuesta exitosa si se encuentra el usuario
-                emit(ApiResponse(data = user, status = "Success", messages = listOf("User found"), code = 200))
-            } else {
-                // Emitir error si el usuario no es encontrado
-                emit(ApiResponse(status = "Error", messages = listOf("User not found"), code = 404))
-            }
-        } catch (e: Exception) {
-            // Emitir error en caso de fallo
-            emit(ApiResponse(status = "Error", messages = listOf("Error retrieving user: ${e.message}"), code = 500))
-        }
-    }
 
     override suspend fun authenticateUser(user: User): Flow<ApiResponse<String>> = flow {
         try {
@@ -147,35 +129,4 @@ class UserRepositoryImpl(database: MongoDatabase) : UserRepository {
         }
     }
 
-    override suspend fun validateToken(token: String): Flow<ApiResponse<User>> = flow {
-        try {
-            // Emitir estado de loading
-
-            val email = JWTUtil.validateToken(token) // Extraer el email del token
-
-            if (email != null) {
-                val document = collection.find(Document("email", email)).firstOrNull()
-                if (document != null) {
-                    val user = User(
-                        id = document.getObjectId("_id").toString(),
-                        username = document.getString("username"),
-                        email = document.getString("email"),
-                        password = document.getString("passwordHash")
-                    )
-
-                    // Emitir respuesta exitosa con el usuario
-                    emit(ApiResponse(data = user, status = "Success", messages = listOf("Token validated"), code = 200))
-                } else {
-                    // Emitir error si el usuario no es encontrado
-                    emit(ApiResponse(status = "Error", messages = listOf("User not found"), code = 404))
-                }
-            } else {
-                // Emitir error si el token no es válido
-                emit(ApiResponse(status = "Error", messages = listOf("Invalid token"), code = 401))
-            }
-        } catch (e: Exception) {
-            // Emitir error en caso de fallo
-            emit(ApiResponse(status = "Error", messages = listOf("Error validating token: ${e.message}"), code = 500))
-        }
-    }
 }

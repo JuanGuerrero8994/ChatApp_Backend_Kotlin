@@ -69,29 +69,6 @@ paths:
         "401":
           description: "Invalid credentials"
 
-  /users/{username}:
-    get:
-      tags: [User]
-      security:
-        - bearerAuth: []
-      summary: Retrieve a user by username
-      description: "Retrieve a user by username"
-      parameters:
-        - name: "username"
-          in: "path"
-          required: true
-          schema:
-            type: "string"
-      responses:
-        "200":
-          description: "User found"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/User"
-        "404":
-          description: "User not found"
-
   /users/change-password:
     post:
       tags: [ User ]
@@ -148,49 +125,6 @@ paths:
           description: "Message successfully created"
         "400":
           description: "Invalid message data"
-
-  /{id}/messages:
-    get:
-      summary: Obtener los mensajes de una sala específica
-      description: Este endpoint permite obtener todos los mensajes de una sala de chat específica utilizando el ID de la sala.
-      operationId: getMessagesByChatRoomId
-      parameters:
-        - name: id
-          in: path
-          required: true
-          description: El ID de la sala de chat para obtener sus mensajes.
-          schema:
-           type: string
-      responses:
-        '200':
-          description: Mensajes obtenidos exitosamente
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/MessageResponseDTO'
-        '400':
-          description: Solicitud incorrecta debido a falta del ID de la sala
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: "Falta el ID de la sala"
-        '500':
-          description: Error al obtener los mensajes
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: "Error al obtener los mensajes"
-
 
   /upload:
     post:
@@ -463,6 +397,51 @@ paths:
             application/json:
               schema:
                 type: boolean
+
+  /chatrooms/{id}/messages:
+    security:
+      - bearerAuth: [ ]
+    get:
+      tags: [ ChatRoom ]
+      summary: Obtener los mensajes de una sala específica
+      description: Este endpoint permite obtener todos los mensajes de una sala de chat específica utilizando el ID de la sala.
+      operationId: getMessagesByChatRoomId
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: El ID de la sala de chat para obtener sus mensajes.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Mensajes obtenidos exitosamente
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MessageResponseDTO'
+        '400':
+          description: Solicitud incorrecta debido a falta del ID de la sala
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Falta el ID de la sala"
+        '500':
+          description: Error al obtener los mensajes
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Error al obtener los mensajes"
 components:
   securitySchemes:
     bearerAuth:
